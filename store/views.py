@@ -8,6 +8,12 @@ from rest_framework import status
 from rest_framework.permissions import IsAdminUser,IsAuthenticated,AllowAny
 from django.core.exceptions import PermissionDenied
 from .mixin import AdminOnlyMixin
+from django.shortcuts import get_object_or_404
+from django.db.models import Count
+# from django_filters.rest_framework import DjangoFilterBackend,OrderingFilter
+from rest_framework.filters import OrderingFilter
+from django_filters.rest_framework import DjangoFilterBackend
+
 
 
 # Create your views here.
@@ -152,11 +158,19 @@ class SubCatagoryViewSet(ModelViewSet):
         
 
 class ServiceViewSet(ModelViewSet):
-    queryset=Service.objects.select_related('sub_catagory').all()
+    queryset=Service.objects.select_related('sub_catagory').annotate(rating=Avg('ratings__rating'))
     serializer_class=ServiceSerializer
     permission_classes = [IsAuthenticated]
+    filter_backends = [DjangoFilterBackend,OrderingFilter,]
+    filterset_fields=['account__team_name']
+    ordering_fields=['rating','amount']
+
+
 
     def create(self, request, *args, **kwargs):
+
+        
+   
         data = request.data.copy()
         # print (self.request.user.role)
         data["account"]=self.request.user.id
@@ -187,17 +201,332 @@ class ServiceViewSet(ModelViewSet):
     #     else:
     #         raise PermissionDenied("You are not allowed to create this object.")
 
+    # def list(self, request, *args, **kwargs):
+    #     if self.request.user.role in ['admin', 'customer']:
+    #         return super().list(request, *args, **kwargs)
+    #     elif self.request.user.role == 'event_management':
+    #         queryset = Service.objects.filter(account=self.request.user)
+    #         serializer = ServiceSerializer(queryset, many=True)
+    #         return Response(serializer.data)
+    #     else:
+    #         raise PermissionDenied("You are not allowed to retrieve this object.")
+        
     def list(self, request, *args, **kwargs):
-        if self.request.user.role in ['admin', 'customer']:
-            return super().list(request, *args, **kwargs)
+        # queryset = self.filter_queryset(queryset)
+        queryset=self.get_queryset()
+        queryset = self.filter_queryset(queryset)
+        
+        if self.request.user.role in ['admin', 'customer'] and request.GET.get('sub_catagory'):
+            sub_catagory=self.request.GET.get('sub_catagory')
+            queryset=queryset.filter(sub_catagory=sub_catagory)
+            # queryset=queryset.filter(sub_catagory=sub_catagory)
+            serializer=ServiceSerializer(queryset,many=True)
+            # return super().list(request, *args, **kwargs)
+            return Response (serializer.data,status=status.HTTP_200_OK)
         elif self.request.user.role == 'event_management':
-            queryset = Service.objects.filter(account=self.request.user)
+            queryset = queryset.filter(account=self.request.user)
             serializer = ServiceSerializer(queryset, many=True)
             return Response(serializer.data)
+        elif self.request.user.role == 'admin':
+            return super().list(request, *args, **kwargs)
+
         else:
             raise PermissionDenied("You are not allowed to retrieve this object.")
 
         
+    
+        
+    # def retrieve(self, request, *args, **kwargs):
+    #     queryset=self.get_queryset()
+    #     if self.request.user.role in ['admin','customer']:
+    #         serializer=ServiceSerializer(queryset,many=True)
+    #         return Response (serializer.data,status=status.HTTP_200_OK)
+    #     elif self.request.user.role == 'event_management':
+    #         queryset = Service.objects.filter(account=self.request.user)
+    #         serializer = ServiceSerializer(queryset, many=True)
+    #         return Response(serializer.data)
+    #     elif self.request.user.role == 'admin':
+    #         return super().list(request, *args, **kwargs)
+
+    #     else:
+    #         raise PermissionDenied("You are not allowed to retrieve this object.")
 
         
+    def retrieve(self, request, service_id=None,*args, **kwargs):
+        data = request.data.copy()
+        data["service"] = kwargs["service_id"]
+        service = Service.objects.get(id=kwargs["service_id"])
+        if request.user.role == 'event_management':
+            if service.account.id == self.request.user.id:
+                        
+                queryset = self.get_queryset()
+                serializer = EnquirySerializer(queryset, many=True)
+                return Response(serializer.data)
+        else:
+            raise PermissionDenied("You are not the owner of this service.")
+        
 
+class RatingViewSet(ModelViewSet):
+    queryset = Rating.objects.all()
+    serializer_class = RatingSerializer
+    permission_classes=[IsAuthenticated]
+    
+    # def create(self, request, *args, **kwargs):
+        
+    #     data = request.data.copy()
+    #     data["name"]=self.request.user.username
+        
+
+    #     serializer = RatingSerializer(data=data)
+
+    #     if serializer.is_valid():
+    #         if self.request.user.role in ['admin','customer']:
+    #             serializer.save(name=self.request.user.username)
+    #             return Response(serializer.data, status=status.HTTP_201_CREATED)
+    #         else:
+    #             raise PermissionDenied("You are not allowed to create this object.")
+    #     else:
+    #         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    # def create(self, request, *args, **kwargs):
+    #     data = request.data.copy()
+    #     data["name"] = self.request.user.username
+
+    #     serializer = RatingSerializer(data=data)
+
+    #     if serializer.is_valid():
+    #         if self.request.user.role in ['admin','customer']:
+    #             serializer.save(name=self.request.user.username)
+    #             return Response(serializer.data, status=status.HTTP_201_CREATED)
+    #         else:
+    #             raise PermissionDenied("You are not allowed to create this object.")
+    #     else:
+    #         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+    # def create(self, request, *args, **kwargs):
+    #     data = request.data.copy()
+    #     data["name"] = self.request.user.username
+
+    #     serializer = RatingSerializer(data=data)
+
+    #     if serializer.is_valid():
+    #         if self.request.user.role in ['admin','customer']:
+    #             serializer.save()
+    #             return Response(serializer.data, status=status.HTTP_201_CREATED)
+    #         else:
+    #             raise PermissionDenied("You are not allowed to create this object.")
+    #     else:
+    #         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+
+    def create(self, request, *args, **kwargs):
+        data = request.data.copy()
+
+        serializer = RatingSerializer(data=data)
+
+        if serializer.is_valid():
+            if self.request.user.role in ['admin','customer']:
+                serializer.save(name=self.request.user.username)
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            else:
+                raise PermissionDenied("You are not allowed to create this object.")
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)      
+
+
+
+class NotificationViewSet(ModelViewSet):
+    queryset=Notification.objects.all()
+    serializer_class=NotificationSerializer
+    permission_classes=[IsAuthenticated]
+
+        
+    def create(self, request, *args, **kwargs):
+        serializer = NotificationSerializer(data=request.data)
+        if serializer.is_valid():
+            # print (self.request.user.role
+            #     )
+            if self.request.user.role == 'admin':
+                
+                serializer.save()
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            else:
+                raise PermissionDenied("You are not allowed to create this object.")
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+
+    def list(self, request, *args, **kwargs):
+        queryset=self.get_queryset().order_by('auto_id')
+        if self.request.user.role in ['admin', 'event_management'] :
+            serializer=NotificationSerializer(queryset,many=True)
+            # return super().list(request, *args, **kwargs)
+            return Response (serializer.data,status=status.HTTP_200_OK)
+
+        else:
+            raise PermissionDenied("You are not allowed to retrieve this object.")
+        
+
+class EnquiryViewSet(ModelViewSet):
+    queryset = Enquiry.objects.all()
+    serializer_class = EnquirySerializer
+    permission_classes = [IsAuthenticated]
+
+    # def perform_create(self, serializer):
+    #     serializer.save(user=self.request.user)
+
+
+    
+    # def get_queryset(self):
+    #     if self.request.user.is_authenticated:
+    #         return Enquiry.objects.filter(sent_by=self.request.user) | Enquiry.objects.filter(received_by=self.request.user)
+    #     else:
+    #         return Enquiry.objects.none()
+
+    # def create(self, request, *args, **kwargs):
+    #     data = request.data.copy()
+    #     data["service"] = kwargs["service_id"]
+    #     service = Service.objects.get(id=kwargs["service_id"])
+    #     if service.account.id == self.request.user.id:
+    #         serializer = EnquirySerializer(data=data)
+    #         if serializer.is_valid():
+    #             serializer.save()
+    #             return Response(serializer.data, status=status.HTTP_201_CREATED)
+    #         else:
+    #             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    #     else:
+    #         raise PermissionDenied("You are not the owner of this service.")
+        
+    def list(self, request,*args, **kwargs):
+        queryset=self.get_queryset()
+        
+        # data = request.data.copy()
+        # data["service"] = kwargs["service"]
+        # service = Service.objects.get(pk=service_id)
+        # service = get_object_or_404(Service, pk=service)
+        # enquiry=get_object_or_404(Enquiry,pk=enquiry_id)
+        
+        if request.user.role == 'event_management':
+            # if Enquiry.service.account.id == self.request.user.id:
+                
+                queryset = queryset.filter(service__account__id = self.request.user.id)
+                serializer = EnquirySerializer(queryset, many=True)
+                return Response(serializer.data)
+            # else:
+            #     raise PermissionDenied("You are not the owner of this service.")
+    
+        else:
+            raise PermissionDenied("You are not the owner of this service.")
+
+
+
+    # def list(self, request, enquiry_id=None, *args, **kwargs):
+    #     # check if enquiry_id is provided
+    #     if enquiry_id is None:
+    #         raise ValueError("enquiry_id is required")
+    #     # get enquiry object
+    #     enquiry = get_object_or_404(Enquiry, pk=enquiry_id)
+    #     if request.user.role == 'event_management':
+    #         if enquiry.service.account.id == self.request.user.id:
+    #             queryset = self.get_queryset().filter(pk=enquiry_id)
+    #             serializer = EnquirySerializer(queryset, many=True)
+    #             return Response(serializer.data)
+    #         else:
+    #             raise PermissionDenied("You are not the owner of this service.")
+    
+    #     else:
+    #         raise PermissionDenied("You are not the owner of this service.")
+
+
+    # def retrieve(self, request, pk=None, service_id=None):
+    #     queryset = self.get_queryset()
+    #     enquiry = get_object_or_404(queryset, pk=pk)
+    #     serializer = EnquirySerializer(enquiry)
+    #     return Response(serializer.data)
+
+class InboxViewSet(ModelViewSet):
+    queryset=Inbox.objects.all()
+    serializer_class=InboxSerializer
+    permission_classes=[IsAuthenticated]
+
+    def create(self, request, *args, **kwargs):
+        serializer = InboxSerializer(data=request.data)
+        if serializer.is_valid():
+            # print (self.request.user.role
+            #     )
+            if self.request.user.role == 'customer':
+                
+                serializer.save()
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            else:
+                raise PermissionDenied("You are not allowed to create this object.")
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def list(self, request,*args, **kwargs):
+        queryset=self.get_queryset()
+
+        if request.user.role == 'event_management':
+            # if Enquiry.service.account.id == self.request.user.id:
+                
+                queryset = queryset.filter(service__account__id = self.request.user.id)
+                serializer = EnquirySerializer(queryset, many=True)
+                return Response(serializer.data)
+            # else:
+            #     raise PermissionDenied("You are not the owner of this service.")
+        
+    
+        else:
+            raise PermissionDenied("You are not the owner of this service.")
+        
+
+
+# class PopularityViewSet(ModelViewSet):
+#     serializer_class = PopularitySerializer
+
+#     # def get_queryset(self):
+#     #     popularity = Popularity.objects.all()
+#     #     popularity = popularity.annotate(enquiry_count=Count('enquiries'))
+#     #     popularity = popularity.order_by('-popularity')
+#     #     return popularity
+
+#     def get_queryset(self):
+#         eventment_teams = Account.objects.filter(role='event_management')
+#         popularity_list = []
+#         for eventment_team in eventment_teams:
+#             popularity_obj = Popularity()
+#             popularity_obj.eventment_team = eventment_team
+#             popularity_obj.calculate_popularity()
+#             popularity_list.append(popularity_obj)
+#         return popularity_list
+    
+class PopularityViewSet(ModelViewSet):
+    queryset = Popularity.objects.all()
+    serializer_class = PopularitySerializer
+
+    # def get_queryset(self):
+    #     queryset = self.queryset
+    #     queryset = queryset.annotate(enquiry_count=Count('eventment_team__enquiries'))
+    #     queryset = queryset.order_by('-popularity')
+    #     return queryset
+
+    # def perform_create(self, serializer):
+    #     serializer.save(enquiry_count=self.request.data.get('enquiry_count', 0))
+    #     serializer.instance.calculate_popularity()
+
+        
+    # def calculate_popularity(self):
+    #         total_enquiries = Enquiry.objects.count()
+    #         if total_enquiries > 0:
+    #             self.popularity = (self.enquiry_count / total_enquiries) * 100
+    #         else:
+    #             self.popularity = 0.0
+    #         self.save()
+
+
+    # def get_queryset(self):
+    #     popularity = Popularity.objects.all()
+    #     popularity = popularity.annotate(enquiry_count=Count('eventment_team__enquiries'))
+    #     popularity = popularity.order_by('-popularity')
+    #     return popularity

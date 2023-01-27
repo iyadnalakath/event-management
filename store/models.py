@@ -1,6 +1,8 @@
 from django.db import models
 from main.models import BaseModel
 from projectaccount.models import Account
+from django.db.models import Avg
+from decimal import Decimal
 
 
 # Create your models here.
@@ -46,3 +48,81 @@ class Service(BaseModel):
     # rating=models.IntegerField(null=True,blank=True)
     # is_featured=models.BooleanField(default=False)
     account = models.ForeignKey(Account,on_delete=models.PROTECT,related_name='event_team')
+    rating=models.DecimalField(max_digits=5, decimal_places=2,default=0.00)
+
+    # def rating(self):
+    #     rating = self.ratings.aggregate(Avg('rating'))
+    #     return rating.get('rating__avg')
+
+    def rating(self):
+        rating = self.ratings.aggregate(Avg('rating'))
+        self.rating = rating.get('rating__avg')
+        self.save()
+        return self.rating
+
+
+    def __str__(self) -> str:
+        return self.service_name
+
+
+class Rating(models.Model):
+    # user = models.ForeignKey(User, on_delete=models.CASCADE)
+    rating = models.DecimalField(max_digits=5, decimal_places=2,default=0.00)
+    service = models.ForeignKey(Service, on_delete=models.CASCADE, related_name='ratings')
+    review = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    name=models.CharField(max_length=255,null=True,blank=True)
+    # account = models.ForeignKey(Account,on_delete=models.CASCADE,related_name='rating',null=True,blank=True)
+
+class Notification(BaseModel):
+    notification=models.TextField(null=True,blank=True)
+
+class Enquiry(models.Model):
+    service = models.ForeignKey(Service, on_delete=models.CASCADE,related_name='enquiries')
+    # email=models.EmailField(null=True,blank=True)
+    name=models.CharField(max_length=255,null=True,blank=True)
+    phone = models.CharField(max_length=255,null=True,blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    # sent_by = models.ManyToManyField(Account, related_name="sent_enquiries")
+    # received_by = models.ManyToManyField(Account, related_name="received_enquiries")
+
+class Inbox(models.Model):
+    service = models.ForeignKey(Service, on_delete=models.CASCADE,related_name='contact_us')
+    email=models.EmailField(null=True,blank=True)
+    subject=models.CharField(max_length=255,null=True,blank=True)
+    message=models.TextField(null=True,blank=True)
+
+
+# class Popularity(models.Model):
+#     eventment_team = models.ForeignKey(Account, on_delete=models.CASCADE)
+#     # enquiry=models.ForeignKey(Enquiry,on_delete=models.CASCADE,null=True,blank=True,related_name='popula')
+#     enquiry_count = models.IntegerField()
+#     popularity = models.FloatField(default=0.0)
+
+#     # def calculate_popularity(self):
+#     #     total_enquiries = Enquiry.objects.count()
+#     #     self.popularity = (self.enquiry_count / total_enquiries) * 100
+#     #     self.save()
+
+#     def save(self, *args, **kwargs):
+#         self.enquiry_count = self.eventment_team.enquiries.count()
+#         self.calculate_popularity()
+#         super().save(*args, **kwargs)
+
+#     def calculate_popularity(self):
+#         total_enquiries = Enquiry.objects.count()
+#         self.popularity = (self.enquiry_count / total_enquiries) * 100
+
+class Popularity(models.Model):
+    eventment_team = models.ForeignKey(Service, on_delete=models.CASCADE, related_name='popularity')
+    enquiry_count = models.IntegerField(default=0)
+    popularity = models.FloatField(default=0.0)
+
+    # def calculate_popularity(self):
+    #     total_enquiries = Enquiry.objects.count()
+    #     if total_enquiries > 0:
+    #         self.popularity = (self.enquiry_count / total_enquiries) * 100
+    #     else:
+    #         self.popularity = 0.0
+    #     self.save()

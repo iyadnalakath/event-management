@@ -2,10 +2,14 @@ from django.shortcuts import render
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from .serializer import LoginSerializer, RegisterCustomerSerializer,RegisterEventTeamSerializer
+from .serializer import LoginSerializer, RegisterCustomerSerializer,RegisterEventTeamSerializer,UserListSerializer,EventManagementListSerializer
 from django.contrib.auth import authenticate
 from rest_framework.authtoken.models import Token
 from rest_framework.permissions import AllowAny
+from django.core.exceptions import PermissionDenied
+from rest_framework import generics
+from .models import *
+from rest_framework.permissions import IsAdminUser,IsAuthenticated
 
 
 # Create your views here.
@@ -107,6 +111,17 @@ class RegisterEventTeamView(APIView):
         else:
             data = serializer.errors
         return Response(data,status=status.HTTP_401_UNAUTHORIZED)
+    
+
+    def list(self, request, *args, **kwargs):
+        queryset=self.get_queryset().order_by('auto_id')
+        if self.request.user.role == 'admin' :
+            serializer=RegisterEventTeamSerializer(queryset,many=True)
+            # return super().list(request, *args, **kwargs)
+            return Response (serializer.data,status=status.HTTP_200_OK)
+
+        else:
+            raise PermissionDenied("You are not allowed to retrieve this object.")
 
 
 
@@ -174,4 +189,34 @@ class LoginView(APIView):
             # )
         
 
-            
+class ListUsersView(generics.ListAPIView):
+    queryset = Account.objects.all()
+    serializer_class = UserListSerializer
+    permission_classes=[IsAuthenticated]
+
+    def list(self, request, *args, **kwargs):
+        queryset=self.get_queryset()
+        if self.request.user.role == 'admin':
+            serializer=UserListSerializer(queryset,many=True)
+            # return super().list(request, *args, **kwargs)
+            return Response (serializer.data,status=status.HTTP_200_OK)
+
+        else:
+            raise PermissionDenied("You are not allowed to retrieve this object.")
+        
+
+class EventManagementUsersView(generics.ListAPIView):
+    queryset = Account.objects.filter(role='event_management')
+    serializer_class = EventManagementListSerializer
+
+    
+    def list(self, request, *args, **kwargs):
+        queryset=self.get_queryset()
+        if self.request.user.role == 'admin':
+            serializer=EventManagementListSerializer(queryset,many=True)
+            # return super().list(request, *args, **kwargs)
+            return Response (serializer.data,status=status.HTTP_200_OK)
+
+        else:
+            raise PermissionDenied("You are not allowed to retrieve this object.")
+

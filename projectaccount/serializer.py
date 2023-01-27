@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth import authenticate
 from .models import Account
-
+from django.contrib.auth.models import User
 
 
 class LoginSerializer(serializers.Serializer):
@@ -151,3 +151,49 @@ class RegisterEventTeamSerializer(serializers.ModelSerializer):
         user.save()
         return user
 
+
+
+class UserListSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Account
+        fields = (
+
+                   'id',
+                   'username',
+                   'is_staff',
+                   'last_login',
+                   'over_view',
+                   'work_time',
+                   'is_admin',
+                   'is_active',
+                   'profile_pic',
+                   'full_name',
+                   'role',
+                   'email', 
+                   'is_staff',
+                   'address',
+                   'phone',
+                   'dob',
+                   'work_time',
+                   'date_joined',
+                   'place'
+
+                   
+                   )
+        
+class EventManagementListSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Account
+        fields = (
+
+                    'team_name',
+                    'username',
+                    'email',
+                    'phone',
+                    'place',
+                    'work_time',
+                    'over_view',
+                    'address',
+                    'profile_pic'
+                   
+                   )
