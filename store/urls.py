@@ -1,12 +1,11 @@
 from django.urls import path
 from rest_framework_nested import routers
 from .import views
-from .views import PopularityViewSet
+from .views import PopularityViewSetList
 
 urlpatterns = [
+    path('popular/', PopularityViewSetList.as_view(), name='popular-product-list')
     
-    path('popularity/', PopularityViewSet.as_view({'get': 'list'}), name='popularity'),
-    path('popularity/<int:pk>', PopularityViewSet.as_view({'get': 'retrieve'}), name='popularity-detail'),
 ]
 
 router=routers.DefaultRouter()

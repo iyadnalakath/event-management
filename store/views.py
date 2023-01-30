@@ -13,12 +13,13 @@ from django.db.models import Count
 # from django_filters.rest_framework import DjangoFilterBackend,OrderingFilter
 from rest_framework.filters import OrderingFilter
 from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import generics
 
 
 
 # Create your views here.
 class AreaViewSet(ModelViewSet):
-    queryset=Area.objects.all()
+    queryset=Area.objects.all().filter(is_deleted=False)
     serializer_class=AreaSerializer
     permission_classes=[IsAuthenticated]
 
@@ -97,7 +98,7 @@ class AreaViewSet(ModelViewSet):
 
 
 class SubCatagoryViewSet(ModelViewSet):
-    queryset=SubCatagory.objects.all()
+    queryset=SubCatagory.objects.all().filter(is_deleted=False)
     serializer_class=SubCatagorySerializer
     permission_classes=[AllowAny]
 
@@ -158,7 +159,7 @@ class SubCatagoryViewSet(ModelViewSet):
         
 
 class ServiceViewSet(ModelViewSet):
-    queryset=Service.objects.select_related('sub_catagory').annotate(rating=Avg('ratings__rating'))
+    queryset=Service.objects.select_related('sub_catagory').annotate(rating=Avg('ratings__rating')).filter(is_deleted=False)
     serializer_class=ServiceSerializer
     permission_classes = [IsAuthenticated]
     filter_backends = [DjangoFilterBackend,OrderingFilter,]
@@ -500,10 +501,30 @@ class InboxViewSet(ModelViewSet):
 #             popularity_obj.calculate_popularity()
 #             popularity_list.append(popularity_obj)
 #         return popularity_list
+
+
+class PopularityViewSetList(generics.ListAPIView):
+    queryset = Service.objects.all().annotate(rating=Avg('ratings__rating')).order_by('-rating').filter(is_deleted=False)
+    serializer_class = ServiceSerializer
+    permission_classes=[IsAuthenticated]
+  
+
+
+
+
+    # def list(self, request, *args, **kwargs):
+    #     queryset=self.get_queryset()
+    #     if self.request.user.role == 'admin':
+    #         serializer=ServiceSerializer(queryset,many=True)
+    #         # return super().list(request, *args, **kwargs)
+    #         return Response (serializer.data,status=status.HTTP_200_OK)
+
+    #     else:
+    #         raise PermissionDenied("You are not allowed to retrieve this object.")
     
-class PopularityViewSet(ModelViewSet):
-    queryset = Popularity.objects.all()
-    serializer_class = PopularitySerializer
+# class PopularityViewSet(ModelViewSet):
+#     queryset = Popularity.objects.all()
+#     serializer_class = PopularitySerializer
 
     # def get_queryset(self):
     #     queryset = self.queryset

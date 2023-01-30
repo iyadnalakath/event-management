@@ -152,6 +152,7 @@ class ServiceSerializer(serializers.ModelSerializer):
     # account_view=serializers.CharField(source='account.username')
     sub_catagory_name = serializers.CharField(
         source='sub_catagory.sub_catagory_name', read_only=True)
+    # popularity = serializers.FloatField(read_only=True)
     # enquiry=EnquirySerializer(read_only=True,source='enquiries')
 
 
@@ -170,6 +171,7 @@ class ServiceSerializer(serializers.ModelSerializer):
             'account',
             'account_view',
             'rating',
+            # 'popularity'
             # 'enquiry'
             # 'amount',
             # 'rating',
@@ -324,12 +326,29 @@ class InboxSerializer(serializers.ModelSerializer):
         )
 
 class PopularitySerializer(serializers.ModelSerializer):
-    eventment_team = serializers.StringRelatedField()
+    service = ServiceSerializer(source=Service)
+    event_management_name=serializers.CharField(source='service.account__team_name',read_only=True)
+    rating=serializers.FloatField(source='service.ratings__rating')
     class Meta:
         model = Popularity
         fields = (
-                'eventment_team',
-                'enquiry_count',
-                'popularity'
+                'id',
+                'service',
+                'event_management_name',
+                'rating'
+              
 
                      )
+ 
+        
+    #     extra_kwargs = {
+    #         'auto_id': {'read_only': True}
+    #     }
+
+    # def create(self, validated_data):
+    #     popularity = Popularity.objects.create(
+    #         **validated_data,
+    #         auto_id=get_auto_id(Popularity),
+    #         # creator = self.context['request'].user
+    #     )
+    #     return popularity

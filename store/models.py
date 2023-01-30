@@ -48,6 +48,7 @@ class Service(BaseModel):
     # rating=models.IntegerField(null=True,blank=True)
     # is_featured=models.BooleanField(default=False)
     account = models.ForeignKey(Account,on_delete=models.PROTECT,related_name='event_team')
+    popularity = models.FloatField(default=0.0)
     rating=models.DecimalField(max_digits=5, decimal_places=2,default=0.00)
 
     # def rating(self):
@@ -115,9 +116,10 @@ class Inbox(models.Model):
 #         self.popularity = (self.enquiry_count / total_enquiries) * 100
 
 class Popularity(models.Model):
-    eventment_team = models.ForeignKey(Service, on_delete=models.CASCADE, related_name='popularity')
-    enquiry_count = models.IntegerField(default=0)
-    popularity = models.FloatField(default=0.0)
+    service=models.ForeignKey(Service, on_delete=models.CASCADE,related_name='popular')
+    # event_management_name=models.CharField(max_length=255,null=True,blank=True)
+    # rating=models.FloatField(null=True,blank=True)
+
 
     # def calculate_popularity(self):
     #     total_enquiries = Enquiry.objects.count()
