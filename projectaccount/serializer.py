@@ -113,7 +113,7 @@ class RegisterEventTeamSerializer(serializers.ModelSerializer):
     
     class Meta:
         model=Account
-        fields = ['team_name','username','email','phone','place','work_time','over_view','address','profile_pic','password', 'password2']
+        fields = ['team_name','username','email','phone','place','work_time','over_view','address','password', 'password2']
 
         read_only_fields = ('password2',)
 
@@ -135,7 +135,7 @@ class RegisterEventTeamSerializer(serializers.ModelSerializer):
             work_time=self.validated_data['work_time'],
             over_view=self.validated_data['over_view'],
             address=self.validated_data['address'],
-            profile_pic=self.validated_data['profile_pic']
+            # profile_pic=self.validated_data['profile_pic']
 
 
         )
@@ -166,7 +166,7 @@ class UserListSerializer(serializers.ModelSerializer):
                    'work_time',
                    'is_admin',
                    'is_active',
-                   'profile_pic',
+                #    'profile_pic',
                    'full_name',
                    'role',
                    'email', 
@@ -194,6 +194,15 @@ class EventManagementListSerializer(serializers.ModelSerializer):
                     'work_time',
                     'over_view',
                     'address',
-                    'profile_pic'
+                    # 'profile_pic'
                    
                    )
+        
+class ProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model=Account
+        fields=(
+            'profile_pic',
+            'more_photos'
+
+        )

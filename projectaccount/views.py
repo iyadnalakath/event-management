@@ -2,7 +2,7 @@ from django.shortcuts import render
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from .serializer import LoginSerializer, RegisterCustomerSerializer,RegisterEventTeamSerializer,UserListSerializer,EventManagementListSerializer
+from .serializer import LoginSerializer, RegisterCustomerSerializer,RegisterEventTeamSerializer,UserListSerializer,EventManagementListSerializer,ProfileSerializer
 from django.contrib.auth import authenticate
 from rest_framework.authtoken.models import Token
 from rest_framework.permissions import AllowAny
@@ -10,6 +10,7 @@ from django.core.exceptions import PermissionDenied
 from rest_framework import generics
 from .models import *
 from rest_framework.permissions import IsAdminUser,IsAuthenticated
+from rest_framework.viewsets import ModelViewSet
 
 
 # Create your views here.
@@ -171,7 +172,7 @@ class LoginView(APIView):
             context['pk'] = user.pk
             context['username'] = username.lower()
             context['token'] = token.key
-            # context['role'] = account.role
+            context['role'] = user.role
             context['response'] = 'Successfully authenticated.'
             return Response(context,status=status.HTTP_200_OK)
         else:
@@ -220,3 +221,7 @@ class EventManagementUsersView(generics.ListAPIView):
         else:
             raise PermissionDenied("You are not allowed to retrieve this object.")
 
+# class ProfileViewSet(ModelViewSet):
+#     queryset=Account.objects.all()
+#     serializer_class=ProfileSerializer
+#     permission_classes=[IsAuthenticated]

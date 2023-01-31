@@ -335,8 +335,7 @@ class PopularitySerializer(serializers.ModelSerializer):
                 'id',
                 'service',
                 'event_management_name',
-                'rating'
-              
+                'rating'              
 
                      )
  

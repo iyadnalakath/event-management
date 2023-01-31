@@ -70,9 +70,10 @@ class Account(AbstractBaseUser):
     dob = models.CharField(max_length=30,null=True,blank=True)
     team_name=models.CharField(max_length=255,null=False,blank=False,default="")
     place=models.CharField(max_length=255,null=False,blank=False,default="")
-    work_time=models.DateTimeField(null=True,blank=True)
+    work_time=models.CharField(max_length=255,null=True,blank=True)
     over_view=models.CharField(max_length=555,null=True,blank=True)
     profile_pic=models.ImageField(upload_to ='mediafiles',default="",null=True,blank=True)
+    more_photos=models.ImageField(upload_to ='mediafiles',default="",null=True,blank=True)
 
     role = models.CharField(max_length=30,null=True,blank=True,choices=user_choices,default=user_customer)
 
