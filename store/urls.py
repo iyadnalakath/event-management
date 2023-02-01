@@ -18,6 +18,7 @@ router.register('rating',views.RatingViewSet)
 router.register('notification',views.NotificationViewSet)
 router.register('enquiry',views.EnquiryViewSet)
 router.register('inbox',views.InboxViewSet)
+router.register('profile_pic',views.ProfileViewSet)
 
 
 

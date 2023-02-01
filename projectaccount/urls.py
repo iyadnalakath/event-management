@@ -1,5 +1,8 @@
 from django.urls import path
+from rest_framework_nested import routers
 from .views import LoginView, RegisterCustomerView,RegisterEventTeamView,ListUsersView,EventManagementUsersView
+from .import views
+
 
 urlpatterns = [
     path('login/', LoginView.as_view(), name='login'),

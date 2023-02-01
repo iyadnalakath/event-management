@@ -198,11 +198,3 @@ class EventManagementListSerializer(serializers.ModelSerializer):
                    
                    )
         
-class ProfileSerializer(serializers.ModelSerializer):
-    class Meta:
-        model=Account
-        fields=(
-            'profile_pic',
-            'more_photos'
-
-        )

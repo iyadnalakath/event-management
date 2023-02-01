@@ -11,7 +11,7 @@ from .mixin import AdminOnlyMixin
 from django.shortcuts import get_object_or_404
 from django.db.models import Count
 # from django_filters.rest_framework import DjangoFilterBackend,OrderingFilter
-from rest_framework.filters import OrderingFilter
+from rest_framework.filters import OrderingFilter,SearchFilter
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import generics
 
@@ -162,9 +162,10 @@ class ServiceViewSet(ModelViewSet):
     queryset=Service.objects.select_related('sub_catagory').annotate(rating=Avg('ratings__rating')).filter(is_deleted=False)
     serializer_class=ServiceSerializer
     permission_classes = [IsAuthenticated]
-    filter_backends = [DjangoFilterBackend,OrderingFilter,]
+    filter_backends = [DjangoFilterBackend,OrderingFilter,SearchFilter]
     filterset_fields=['account__team_name']
     ordering_fields=['rating','amount']
+    search_fields = ['service_name']
 
 
 
@@ -551,3 +552,36 @@ class PopularityViewSetList(generics.ListAPIView):
     #     popularity = popularity.annotate(enquiry_count=Count('eventment_team__enquiries'))
     #     popularity = popularity.order_by('-popularity')
     #     return popularity
+
+
+    
+class ProfileViewSet(ModelViewSet):
+    queryset=ProfilePic.objects.all()
+    serializer_class=ProfileSerializer
+    permission_classes=[IsAuthenticated]
+
+    def create(self, request, *args, **kwargs):
+        data = request.data.copy()
+        data["account"]=self.request.user.id
+        serializer = ProfileSerializer(data=data)
+
+        if serializer.is_valid():
+            if self.request.user.role in ['admin','event_management']:
+                serializer.save()
+                return Response(serializer.data,status=status.HTTP_201_CREATED)
+            else:
+                return PermissionDenied("You are not allowed to create this object.")
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+    def list(self, request, *args, **kwargs):
+        queryset=self.get_queryset()
+        if self.request.user.role in ['admin','customer']:
+            serializer=ProfileSerializer(queryset,many=True)
+            return Response (serializer.data,status=status.HTTP_200_OK)
+        elif self.request.user.role == 'event_management':
+            queryset=queryset.filter(account=self.request.user)
+            serializer=ProfileSerializer(queryset,many=True)
+            return Response(serializer.data)
+        else:
+            raise PermissionDenied("You are not allowed to retrieve this object.")      

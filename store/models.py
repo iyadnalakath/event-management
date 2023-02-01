@@ -128,3 +128,7 @@ class Popularity(models.Model):
     #     else:
     #         self.popularity = 0.0
     #     self.save()
+class ProfilePic(BaseModel):
+    account = models.ForeignKey(Account,on_delete=models.PROTECT,related_name='profile',null=True,blank=True)
+    profile_pic=models.ImageField(upload_to ='mediafiles',default="",null=True,blank=True)
+    more_photos=models.ImageField(upload_to ='mediafiles',default="",null=True,blank=True)

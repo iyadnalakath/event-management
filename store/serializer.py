@@ -117,7 +117,7 @@ class EventTeamSerializer(serializers.ModelSerializer):
             'work_time',
             'over_view',
             'address',
-            'profile_pic'
+            # 'profile_pic'
 
         ]
 
@@ -351,3 +351,27 @@ class PopularitySerializer(serializers.ModelSerializer):
     #         # creator = self.context['request'].user
     #     )
     #     return popularity
+
+class ProfileSerializer(serializers.ModelSerializer):
+    account_view = EventTeamSerializer(read_only=True, source='account')
+    class Meta:
+        model=ProfilePic
+        fields=(
+            'id',
+            'account',
+            'account_view',
+            'profile_pic',
+            'more_photos'
+
+        )
+        extra_kwargs = {
+            'auto_id': {'read_only': True}
+        }
+
+    def create(self, validated_data):
+        profile_pic = ProfilePic.objects.create(
+            **validated_data,
+            auto_id=get_auto_id(ProfilePic),
+            # creator = self.context['request'].user
+        )
+        return profile_pic
