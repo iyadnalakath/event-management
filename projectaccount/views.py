@@ -90,6 +90,7 @@ class RegisterCustomerView(APIView):
         else:
             data = serializer.errors
         return Response(data,status=status.HTTP_401_UNAUTHORIZED)
+    
 
 class RegisterEventTeamView(APIView):
     permission_classes= [AllowAny]
@@ -110,8 +111,10 @@ class RegisterEventTeamView(APIView):
             status_code=status.HTTP_200_OK
             return Response(data,status=status_code)
         else:
-            data = serializer.errors
-        return Response(data,status=status.HTTP_401_UNAUTHORIZED)
+            # data = serializer.errors
+            return Response(serializer.errors,status=status.HTTP_401_UNAUTHORIZED)
+        
+
     
 
     def list(self, request, *args, **kwargs):

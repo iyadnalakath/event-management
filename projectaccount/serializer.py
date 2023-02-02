@@ -67,27 +67,36 @@ class RegisterCustomerSerializer(serializers.ModelSerializer):
         #     user.save()
         #     return user
 
-    def create(self, validated_data):
-        user = Account.objects.create(
-            username=validated_data['username'],
-            email=validated_data['email'],
-            full_name=self.validated_data['full_name'],
-            phone=self.validated_data['phone'],
-            
-            # custom_field=validated_data['custom_field']
-        )
-        # user.save()
 
+    def create(self, validated_data):
+        
         password = self.validated_data['password']
 
             # password2 =self.validated_data.pop('password2')
         password2 = self.validated_data['password2']
         if password != password2:
             raise serializers.ValidationError({'password': 'Passwords must match.'})
-        user.set_password(validated_data['password'])
-        user.role = 'customer'
-        user.save()
-        return user
+        else:
+            user = Account.objects.create(
+                username=validated_data['username'],
+                email=validated_data['email'],
+                full_name=self.validated_data['full_name'],
+                phone=self.validated_data['phone'],
+                
+                # custom_field=validated_data['custom_field']
+            )
+            # user.save()
+
+            # password = self.validated_data['password']
+
+            #     # password2 =self.validated_data.pop('password2')
+            # password2 = self.validated_data['password2']
+            # if password != password2:
+            #     raise serializers.ValidationError({'password': 'Passwords must match.'})
+            user.set_password(validated_data['password'])
+            user.role = 'customer'
+            user.save()
+            return user
 
     # def save(self, commit=True):
     #     user = super().save(commit=False)
@@ -126,30 +135,34 @@ class RegisterEventTeamSerializer(serializers.ModelSerializer):
 
 
     def create(self, validated_data):
-        user = Account.objects.create(
-            username=validated_data['username'],
-            email=validated_data['email'],
-            team_name=self.validated_data['team_name'],
-            phone=self.validated_data['phone'],
-            place=self.validated_data['place'],
-            work_time=self.validated_data['work_time'],
-            over_view=self.validated_data['over_view'],
-            address=self.validated_data['address'],
-            # profile_pic=self.validated_data['profile_pic']
-
-
-        )
-    
-
         password = self.validated_data['password']
 
         password2 = self.validated_data['password2']
+
         if password != password2:
             raise serializers.ValidationError({'password': 'Passwords must match.'})
-        user.set_password(validated_data['password'])
-        user.role = 'event_management'
-        user.save()
-        return user
+        else:
+            user = Account.objects.create(
+                username=validated_data['username'],
+                email=validated_data['email'],
+                team_name=self.validated_data['team_name'],
+                phone=self.validated_data['phone'],
+                place=self.validated_data['place'],
+                work_time=self.validated_data['work_time'],
+                over_view=self.validated_data['over_view'],
+                address=self.validated_data['address'],
+                # profile_pic=self.validated_data['profile_pic']
+                password=self.validated_data['password']
+                
+
+
+            )
+        
+
+            user.set_password(validated_data['password'])
+            user.role = 'event_management'
+            user.save()
+            return user
 
 
 

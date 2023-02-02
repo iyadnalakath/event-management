@@ -55,3 +55,14 @@ class NotificationAdmin(admin.ModelAdmin):
         'notification'
     )
 admin.site.register(Notification,NotificationAdmin)
+
+class ProfilePicAdmin(admin.ModelAdmin):
+    list_display=(
+        'id',
+        'account',
+        'profile_pic',
+        'more_photos'
+
+
+    )
+admin.site.register(ProfilePic,ProfilePicAdmin)
