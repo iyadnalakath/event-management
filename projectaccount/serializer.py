@@ -122,7 +122,7 @@ class RegisterEventTeamSerializer(serializers.ModelSerializer):
     
     class Meta:
         model=Account
-        fields = ['team_name','username','email','phone','place','work_time','over_view','address','password', 'password2','pin_code']
+        fields = ['team_name','username','email','phone','place','work_time','over_view','address','password', 'password2','pin_code','district']
 
         read_only_fields = ('password2',)
 
@@ -152,6 +152,7 @@ class RegisterEventTeamSerializer(serializers.ModelSerializer):
                 over_view=self.validated_data['over_view'],
                 address=self.validated_data['address'],
                 pin_code=self.validated_data['pin_code'],
+                district=self.validated_data['district'],
                 # profile_pic=self.validated_data['profile_pic']
                 password=self.validated_data['password']
                 
