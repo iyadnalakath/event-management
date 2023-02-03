@@ -74,6 +74,8 @@ class Account(AbstractBaseUser):
     over_view=models.CharField(max_length=555,null=True,blank=True)
     # profile_pic=models.ImageField(upload_to ='mediafiles',default="",null=True,blank=True)
     # more_photos=models.ImageField(upload_to ='mediafiles',default="",null=True,blank=True)
+    pin_code=models.CharField(max_length=255,null=True,blank=True)
+
 
     role = models.CharField(max_length=30,null=True,blank=True,choices=user_choices,default=user_customer)
 
