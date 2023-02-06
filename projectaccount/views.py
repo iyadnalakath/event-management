@@ -194,7 +194,7 @@ class LoginView(APIView):
         
 
 class ListUsersView(generics.ListAPIView):
-    queryset = Account.objects.all()
+    queryset = Account.objects.filter(role='customer')
     serializer_class = UserListSerializer
     permission_classes=[IsAuthenticated]
 
