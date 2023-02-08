@@ -117,6 +117,7 @@ class EventTeamSerializer(serializers.ModelSerializer):
             'work_time',
             'over_view',
             'address',
+            'district'
             # 'profile_pic'
 
         ]
@@ -274,7 +275,8 @@ class NotificationSerializer(serializers.ModelSerializer):
         model=Notification
         fields=[
             'id',
-            'notification'
+            'notification',
+            'subject'
             ]
         extra_kwargs = {
             'auto_id': {'read_only': True}

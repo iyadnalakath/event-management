@@ -163,7 +163,7 @@ class ServiceViewSet(ModelViewSet):
     serializer_class=ServiceSerializer
     permission_classes = [IsAuthenticated]
     filter_backends = [DjangoFilterBackend,OrderingFilter,SearchFilter]
-    filterset_fields=['account__team_name']
+    filterset_fields=['account__district']
     ordering_fields=['rating','amount']
     search_fields = ['service_name']
 
@@ -219,6 +219,7 @@ class ServiceViewSet(ModelViewSet):
         queryset = self.filter_queryset(queryset)
         
         if self.request.user.role in ['admin', 'customer'] and request.GET.get('sub_catagory'):
+        # if self.request.user.role in ['admin', 'customer'] and request.GET.get in ['sub_catagory' , '']:
             sub_catagory=self.request.GET.get('sub_catagory')
             queryset=queryset.filter(sub_catagory=sub_catagory)
             # queryset=queryset.filter(sub_catagory=sub_catagory)
@@ -229,7 +230,7 @@ class ServiceViewSet(ModelViewSet):
             queryset = queryset.filter(account=self.request.user)
             serializer = ServiceSerializer(queryset, many=True)
             return Response(serializer.data)
-        elif self.request.user.role == 'admin':
+        elif self.request.user.role in ['admin', 'customer']:
             return super().list(request, *args, **kwargs)
 
         else:

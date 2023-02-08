@@ -47,7 +47,7 @@ class Service(BaseModel):
     amount=models.IntegerField(null=True,blank=True)
     # rating=models.IntegerField(null=True,blank=True)
     # is_featured=models.BooleanField(default=False)
-    account = models.ForeignKey(Account,on_delete=models.PROTECT,related_name='event_team')
+    account = models.ForeignKey(Account,on_delete=models.CASCADE,related_name='event_team')
     popularity = models.FloatField(default=0.0)
     rating=models.DecimalField(max_digits=5, decimal_places=2,default=0.00)
 
@@ -76,6 +76,7 @@ class Rating(models.Model):
     # account = models.ForeignKey(Account,on_delete=models.CASCADE,related_name='rating',null=True,blank=True)
 
 class Notification(BaseModel):
+    subject=models.CharField(max_length=255,null=True,blank=True)
     notification=models.TextField(null=True,blank=True)
 
 class Enquiry(models.Model):
