@@ -90,8 +90,8 @@ class Enquiry(models.Model):
     # received_by = models.ManyToManyField(Account, related_name="received_enquiries")
 
 class Inbox(models.Model):
-    service =   models.ForeignKey         (Service, on_delete=models.CASCADE,related_name='contact_us')
-    email=  models.EmailField       (null=True,blank=True)
+    service =   models.ForeignKey(Service, on_delete=models.CASCADE,related_name='contact_us')
+    email=  models.EmailField(null=True,blank=True)
     subject=models.CharField(max_length=255,null=True,blank=True)
     message=models.TextField(null=True,blank=True)
 
