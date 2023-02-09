@@ -180,8 +180,6 @@ class ServiceViewSet(ModelViewSet):
         serializer = ServiceSerializer(data=data)
         
         if serializer.is_valid():
-            print(data)
-            print(data)
             # print (self.request.user.role)
             if self.request.user.role in ['admin','event_management']:
                 
