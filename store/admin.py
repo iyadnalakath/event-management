@@ -52,7 +52,9 @@ admin.site.register(Rating,RatingAdmin)
 class NotificationAdmin(admin.ModelAdmin):
     list_display=(
         'id',
-        'notification'
+        'notification',
+        'subject',
+        'date'
     )
 admin.site.register(Notification,NotificationAdmin)
 

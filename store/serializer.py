@@ -276,7 +276,8 @@ class NotificationSerializer(serializers.ModelSerializer):
         fields=[
             'id',
             'notification',
-            'subject'
+            'subject',
+            'date'
             ]
         extra_kwargs = {
             'auto_id': {'read_only': True}

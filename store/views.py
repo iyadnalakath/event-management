@@ -17,6 +17,7 @@ from rest_framework import generics
 
 
 
+
 # Create your views here.
 class AreaViewSet(ModelViewSet):
     queryset=Area.objects.all().filter(is_deleted=False)

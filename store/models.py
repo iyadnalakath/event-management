@@ -78,6 +78,7 @@ class Rating(models.Model):
 class Notification(BaseModel):
     subject=models.CharField(max_length=255,null=True,blank=True)
     notification=models.TextField(null=True,blank=True)
+    date=models.DateTimeField(auto_now=True,null=True,blank=True)
 
 class Enquiry(models.Model):
     service = models.ForeignKey(Service, on_delete=models.CASCADE,related_name='enquiries')
