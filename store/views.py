@@ -475,7 +475,7 @@ class InboxViewSet(ModelViewSet):
             # if Enquiry.service.account.id == self.request.user.id:
                 
                 queryset = queryset.filter(service__account__id = self.request.user.id)
-                serializer = EnquirySerializer(queryset, many=True)
+                serializer = InboxSerializer(queryset, many=True)
                 return Response(serializer.data)
             # else:
             #     raise PermissionDenied("You are not the owner of this service.")
