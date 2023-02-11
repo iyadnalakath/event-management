@@ -95,6 +95,7 @@ class Inbox(models.Model):
     email=  models.EmailField(null=True,blank=True)
     subject=models.CharField(max_length=255,null=True,blank=True)
     message=models.TextField(null=True,blank=True)
+    date=models.DateTimeField(auto_now=True,null=True,blank=True)
 
 
 # class Popularity(models.Model):

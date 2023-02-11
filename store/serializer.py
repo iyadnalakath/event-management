@@ -325,7 +325,8 @@ class InboxSerializer(serializers.ModelSerializer):
             'service',
             'email',
             'subject',
-            'message'
+            'message',
+            'date'
         )
 
 class PopularitySerializer(serializers.ModelSerializer):
