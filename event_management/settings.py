@@ -26,7 +26,7 @@ SECRET_KEY = 'django-insecure-f*oqek5z0#*v&@1cf-e^!q*^_z(!9m-%_=o$vu@gzhxp8kf$&4
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -58,35 +58,54 @@ AUTH_USER_MODEL = 'projectaccount.Account'
 # REST_AUTH_SERIALIZERS = {     'USER_DETAILS_SERIALIZER':'users.serializers.CustomUserDetailsSerializer' } 
 
 
-# CORS_ORIGIN_ALLOW_ALL = True
+
+MIDDLEWARE = [
+    'django.middleware.security.SecurityMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
+    'debug_toolbar.middleware.DebugToolbarMiddleware',
+    'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.common.CommonMiddleware',
+    'corsheaders.middleware.CorsPostCsrfMiddleware',
+    'django.middleware.csrf.CsrfViewMiddleware',
+    'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django.contrib.messages.middleware.MessageMiddleware',
+    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+
+    
+   
+]
+
+
+
+CORS_ORIGIN_ALLOW_ALL = True
+CORS_ALLOW_CREDENTIALS = True
+# CORS_ALLOWED_ORIGINS = ['*']
+
+# CORS_ALLOW_ALL_ORIGINS = True
 # CORS_ALLOW_CREDENTIALS = True
-# # CORS_ALLOWED_ORIGINS = ['*']
+# CORS_ALLOWED_ORIGINS = [
 
-# # CORS_ALLOW_ALL_ORIGINS = True
-# # CORS_ALLOW_CREDENTIALS = True
-# # CORS_ALLOWED_ORIGINS = [
+# "http://localhost:3000",
 
-# # "http://localhost:3000",
-
-# # ]
-
-
-# # CORS_ALLOW_ALL_ORIGINS = ['*']
-# # CORS_ALLOW_CREDENTIALS = ['*']
-
-
-
-
-# # CORS_ALLOWED_ORIGINS = ['*']
-
-# CORS_ALLOW_METHODS = [
-#     "DELETE",
-#     "GET",
-#     "OPTIONS",
-#     "PATCH",
-#     "POST",
-#     "PUT",
 # ]
+
+
+# CORS_ALLOW_ALL_ORIGINS = ['*']
+# CORS_ALLOW_CREDENTIALS = ['*']
+
+# ALLOWED_HOSTS = ['*']
+
+
+# CORS_ALLOWED_ORIGINS = ['*']
+
+CORS_ALLOW_METHODS = [
+    "DELETE",
+    "GET",
+    "OPTIONS",
+    "PATCH",
+    "POST",
+    "PUT",
+]
 
 # CORS_ALLOW_HEADERS = [
 #     "accept",
@@ -99,64 +118,7 @@ AUTH_USER_MODEL = 'projectaccount.Account'
 #     "x-csrftoken",
 #     "x-requested-with",
 # ]
-
-# cha gpt s code below up to before middleware
-
-MIDDLEWARE = [
-    'django.middleware.security.SecurityMiddleware',
-    'debug_toolbar.middleware.DebugToolbarMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
-    'corsheaders.middleware.CorsMiddleware',
-    'corsheaders.middleware.CorsPostCsrfMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
-]
-
-CORS_ORIGIN_ALLOW_ALL = False
-CORS_ORIGIN_WHITELIST = [
-    'http://localhost:3000',
-    # add other origins here if needed
-]
-
-CORS_ALLOW_METHODS = [
-    "DELETE",
-    "GET",
-    "OPTIONS",
-    "PATCH",
-    "POST",
-    "PUT",
-]
-
-CORS_ALLOW_HEADERS = [
-    "accept",
-    "accept-encoding",
-    "authorization",
-    "content-type",
-    "dnt",
-    "origin",
-    "user-agent",
-    "x-csrftoken",
-    "x-requested-with",
-]
-
-
-# MIDDLEWARE = [
-#     'django.middleware.security.SecurityMiddleware',
-#     'debug_toolbar.middleware.DebugToolbarMiddleware',
-#     'django.contrib.sessions.middleware.SessionMiddleware',
-#     'django.middleware.common.CommonMiddleware',
-#     'django.middleware.csrf.CsrfViewMiddleware',
-#     'django.contrib.auth.middleware.AuthenticationMiddleware',
-#     'django.contrib.messages.middleware.MessageMiddleware',
-#     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-
-#     'corsheaders.middleware.CorsMiddleware',
-#     'django.middleware.csrf.CsrfViewMiddleware',
-#     'corsheaders.middleware.CorsPostCsrfMiddleware',
-# ]
+CORS_ALLOW_HEADERS = "*"
 
 INTERNAL_IPS = [
     # ...
