@@ -234,9 +234,34 @@ class ServiceSerializer(serializers.ModelSerializer):
     #     )
     #     return service
 
+class CustomerUserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Account
+        fields = [
+            'username',
+            'full_name',
+            'phone'
+            # 'profile_pic'
+
+        ]
+
+        def create(self, validated_data):
+            password = password_generater(8)
+            validated_data["password"] = password
+            validated_data["password2"] = password
+
+            account_serializer =CustomerUserSerializer(data=validated_data)
+            if account_serializer.is_valid():
+                account = account_serializer.save()
+
+            return account
+
 
 class RatingSerializer(serializers.ModelSerializer):
-    # account=serializers.CharField(source='account.username',read_only=True)
+    # customer_view= CustomerUserSerializer(read_only=True,source='account')
+    # account_view = EventTeamSerializer(read_only=True, source='account')
+    customer_view = serializers.CharField(
+        source='customer.username', read_only=True)
     class Meta:
         model = Rating
         fields = [
@@ -247,10 +272,18 @@ class RatingSerializer(serializers.ModelSerializer):
             'rating',
             'review',
             'created_at',
-            'name'
+            'customer',
+            'customer_view'         
+            
             # 'account'
 
         ]
+        extra_kwargs = {
+            # 'auto_id': {'read_only': True},
+            'customer_view ':{'read_only':True}
+        }
+
+        
 
 
     def validate_rating(self, value):
@@ -262,14 +295,7 @@ class RatingSerializer(serializers.ModelSerializer):
         #     'name': {'read_only': True}
         # }
 
-    # def create(self, validated_data):
-    #     rating = Rating.objects.create(
-    #         **validated_data,
-    #         auto_id=get_auto_id(Rating),
-    #         # creator = self.context['request'].user
-    #     )
-    #     return rating
-
+   
 class NotificationSerializer(serializers.ModelSerializer):
     class Meta:
         model=Notification

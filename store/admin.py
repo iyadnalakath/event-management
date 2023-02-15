@@ -44,7 +44,7 @@ class RatingAdmin(admin.ModelAdmin):
         'service',
         'review',
         'created_at',
-        'name'
+        'customer'
 
     )
 admin.site.register(Rating,RatingAdmin)
@@ -68,3 +68,29 @@ class ProfilePicAdmin(admin.ModelAdmin):
 
     )
 admin.site.register(ProfilePic,ProfilePicAdmin)
+
+
+class EnquiryAdmin(admin.ModelAdmin):
+    list_display=(
+        'id',
+        'service',
+        'name',
+        'phone',
+        'created_at'
+
+
+    )
+admin.site.register(Enquiry,EnquiryAdmin)
+
+class InboxAdmin(admin.ModelAdmin):
+    list_display=(
+        'id',
+        'service',
+        'email',
+        'subject',
+        'message',
+        'date'
+
+
+    )
+admin.site.register(Inbox,InboxAdmin)

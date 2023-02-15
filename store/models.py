@@ -3,6 +3,7 @@ from main.models import BaseModel
 from projectaccount.models import Account
 from django.db.models import Avg
 from decimal import Decimal
+from django.core.validators import RegexValidator
 
 
 # Create your models here.
@@ -72,7 +73,7 @@ class Rating(models.Model):
     service = models.ForeignKey(Service, on_delete=models.CASCADE, related_name='ratings')
     review = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
-    name=models.CharField(max_length=255,null=True,blank=True)
+    customer=models.ForeignKey(Account,on_delete=models.CASCADE,related_name='customer')
     # account = models.ForeignKey(Account,on_delete=models.CASCADE,related_name='rating',null=True,blank=True)
 
 class Notification(BaseModel):
@@ -84,7 +85,8 @@ class Enquiry(models.Model):
     service = models.ForeignKey(Service, on_delete=models.CASCADE,related_name='enquiries')
     # email=models.EmailField(null=True,blank=True)
     name=models.CharField(max_length=255,null=True,blank=True)
-    phone = models.CharField(max_length=255,null=True,blank=True)
+    # phone = models.CharField(max_length=255,null=True,blank=True)
+    phone= models.IntegerField(validators=[RegexValidator(r'^\d{10}$', 'Phone number must be exactly 10 digits')],null=True,blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     # sent_by = models.ManyToManyField(Account, related_name="sent_enquiries")

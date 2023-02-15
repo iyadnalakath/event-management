@@ -162,7 +162,7 @@ class SubCatagoryViewSet(ModelViewSet):
 class ServiceViewSet(ModelViewSet):
     queryset=Service.objects.select_related('sub_catagory').annotate(rating=Avg('ratings__rating')).filter(is_deleted=False)
     serializer_class=ServiceSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
     filter_backends = [DjangoFilterBackend,OrderingFilter,SearchFilter]
     filterset_fields=['account__district']
     ordering_fields=['rating','amount']
@@ -219,8 +219,8 @@ class ServiceViewSet(ModelViewSet):
         queryset=self.get_queryset()
         queryset = self.filter_queryset(queryset)
         
-        if self.request.user.role in ['admin', 'customer'] and request.GET.get('sub_catagory'):
-        # if self.request.user.role in ['admin', 'customer'] and request.GET.get in ['sub_catagory' , '']:
+        # if self.request.user.role in ['admin', 'customer'] and request.GET.get('sub_catagory'):
+        if self.request.GET.get('sub_catagory'):
             sub_catagory=self.request.GET.get('sub_catagory')
             queryset=queryset.filter(sub_catagory=sub_catagory)
             # queryset=queryset.filter(sub_catagory=sub_catagory)
@@ -256,18 +256,48 @@ class ServiceViewSet(ModelViewSet):
     #         raise PermissionDenied("You are not allowed to retrieve this object.")
 
         
-    def retrieve(self, request, service_id=None,*args, **kwargs):
-        data = request.data.copy()
-        data["service"] = kwargs["service_id"]
-        service = Service.objects.get(id=kwargs["service_id"])
-        if request.user.role == 'event_management':
-            if service.account.id == self.request.user.id:
+    # def retrieve(self, request, service_id=None,*args, **kwargs):
+    #     data = request.data.copy()
+    #     data["service"] = kwargs["service_id"]
+    #     service = Service.objects.get(id=kwargs["service_id"])
+    #     if request.user.role == 'event_management':
+    #         if service.account.id == self.request.user.id:
                         
-                queryset = self.get_queryset()
-                serializer = EnquirySerializer(queryset, many=True)
-                return Response(serializer.data)
+    #             queryset = self.get_queryset()
+    #             serializer = EnquirySerializer(queryset, many=True)
+    #             return Response(serializer.data)
+    #     # elif self.request.user:
+    #     #     return super().list(request, *args, **kwargs)
+    #     else:
+    #         raise PermissionDenied("You are not the owner of this service.")
+
+    def update(self, request, *args, **kwargs):
+        service = self.get_object()
+        serializer = ServiceSerializer(service, data=request.data)
+        if serializer.is_valid():
+            if request.user.role == 'event_management':
+                if service.account.id == self.request.user.id:
+                    serializer.save()
+                    return Response(serializer.data)
+                else:
+                    raise PermissionDenied("You are not allowed to update this object.")
+            else:
+                raise PermissionDenied("only autherised team allowed to update it")
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    def destroy(self, request, *args, **kwargs):
+        service = self.get_object()
+        if request.user.role == 'admin':
+            service.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        elif request.user.role == 'event_management':
+            if service.account.id == self.request.user.id:
+                service.delete()
+                return Response(status=status.HTTP_204_NO_CONTENT)
+            else:
+                raise PermissionDenied("You are not allowed to delete this object.")
         else:
-            raise PermissionDenied("You are not the owner of this service.")
+            raise PermissionDenied("You are not allowed to delete this object.")
         
 
 class RatingViewSet(ModelViewSet):
@@ -326,17 +356,47 @@ class RatingViewSet(ModelViewSet):
 
     def create(self, request, *args, **kwargs):
         data = request.data.copy()
-
+        data["customer"]=self.request.user.id
         serializer = RatingSerializer(data=data)
 
         if serializer.is_valid():
             if self.request.user.role in ['admin','customer']:
-                serializer.save(name=self.request.user.username)
+                serializer.save()
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
             else:
                 raise PermissionDenied("You are not allowed to create this object.")
         else:
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)      
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)  
+
+   
+    def destroy(self, request, *args, **kwargs):
+        rating= self.get_object()
+        if request.user.role == 'admin':
+            rating.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        elif request.user.role == 'customer':
+            if rating.customer.id == self.request.user.id:
+                rating.delete()
+                return Response(status=status.HTTP_204_NO_CONTENT)
+            else:
+                raise PermissionDenied("You are not allowed to delete this object.")
+        else:
+            raise PermissionDenied("You are not allowed to delete this object.")
+        
+    def update(self, request, *args, **kwargs):
+        rating= self.get_object()
+        serializer = RatingSerializer(rating, data=request.data)
+        if serializer.is_valid():
+            if request.user.role == 'customer':
+                if rating.customer.id == self.request.user.id:
+                    serializer.save()
+                    return Response(serializer.data)
+                else:
+                    raise PermissionDenied("You are not allowed to update this object.")
+            else:
+                raise PermissionDenied("only autherised team allowed to update it")
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            
 
 
 
@@ -371,6 +431,17 @@ class NotificationViewSet(ModelViewSet):
         else:
             raise PermissionDenied("You are not allowed to retrieve this object.")
         
+    def update(self, request, *args, **kwargs):
+        notification= self.get_object()
+        serializer = NotificationSerializer(notification, data=request.data)
+        if serializer.is_valid():
+            if request.user.role == 'admin':
+                serializer.save()
+                return Response(serializer.data)
+            else:
+                raise PermissionDenied("You are not allowed to update this object.")
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
 
 class EnquiryViewSet(ModelViewSet):
     queryset = Enquiry.objects.all()
@@ -401,6 +472,19 @@ class EnquiryViewSet(ModelViewSet):
     #             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     #     else:
     #         raise PermissionDenied("You are not the owner of this service.")
+    def create(self, request, *args, **kwargs):
+        serializer = EnquirySerializer(data=request.data)
+        if serializer.is_valid():
+            # print (self.request.user.role
+            #     )
+            if self.request.user.role == 'customer':
+                
+                serializer.save()
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            else:
+                raise PermissionDenied("You are not allowed to create this object.")
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
     def list(self, request,*args, **kwargs):
         queryset=self.get_queryset()
@@ -422,6 +506,19 @@ class EnquiryViewSet(ModelViewSet):
     
         else:
             raise PermissionDenied("You are not the owner of this service.")
+        
+    def retrieve(self, request, pk=None):
+        queryset = self.get_queryset()
+        enquiry = get_object_or_404(queryset, pk=pk)
+
+        if request.user.role == 'event_management' and enquiry.service.account.id == self.request.user.id:
+            serializer = EnquirySerializer(enquiry)
+            return Response(serializer.data)
+        # elif request.user.role == 'customer' and inbox.user == self.request.user:
+        #     serializer = InboxSerializer(inbox)
+        #     return Response(serializer.data)
+        else:
+            raise PermissionDenied("You are not allowed to access this object.")
 
 
 
@@ -443,11 +540,6 @@ class EnquiryViewSet(ModelViewSet):
     #         raise PermissionDenied("You are not the owner of this service.")
 
 
-    # def retrieve(self, request, pk=None, service_id=None):
-    #     queryset = self.get_queryset()
-    #     enquiry = get_object_or_404(queryset, pk=pk)
-    #     serializer = EnquirySerializer(enquiry)
-    #     return Response(serializer.data)
 
 class InboxViewSet(ModelViewSet):
     queryset=Inbox.objects.all()
@@ -474,9 +566,9 @@ class InboxViewSet(ModelViewSet):
         if request.user.role == 'event_management':
             # if Enquiry.service.account.id == self.request.user.id:
                 
-                queryset = queryset.filter(service__account__id = self.request.user.id)
-                serializer = InboxSerializer(queryset, many=True)
-                return Response(serializer.data)
+            queryset = queryset.filter(service__account__id = self.request.user.id)
+            serializer = InboxSerializer(queryset, many=True)
+            return Response(serializer.data)
             # else:
             #     raise PermissionDenied("You are not the owner of this service.")
         
@@ -484,6 +576,18 @@ class InboxViewSet(ModelViewSet):
         else:
             raise PermissionDenied("You are not the owner of this service.")
         
+    def retrieve(self, request, pk=None):
+        queryset = self.get_queryset()
+        inbox = get_object_or_404(queryset, pk=pk)
+
+        if request.user.role == 'event_management' and inbox.service.account.id == self.request.user.id:
+            serializer = InboxSerializer(inbox)
+            return Response(serializer.data)
+        # elif request.user.role == 'customer' and inbox.user == self.request.user:
+        #     serializer = InboxSerializer(inbox)
+        #     return Response(serializer.data)
+        else:
+            raise PermissionDenied("You are not allowed to access this object.")
 
 
 # class PopularityViewSet(ModelViewSet):
@@ -587,3 +691,32 @@ class ProfileViewSet(ModelViewSet):
             return Response(serializer.data)
         else:
             raise PermissionDenied("You are not allowed to retrieve this object.")      
+
+    def update(self, request, *args, **kwargs):
+        profile = self.get_object()
+        serializer = ProfileSerializer(profile, data=request.data)
+        if serializer.is_valid():
+            if request.user.role == 'event_management':
+                if profile.account.id == self.request.user.id:
+                    serializer.save()
+                    return Response(serializer.data)
+                else:
+                    raise PermissionDenied("You are not allowed to update this object.")
+            else:
+                raise PermissionDenied("only autherised team allowed to update it")
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    def destroy(self, request, *args, **kwargs):
+        profile = self.get_object()
+        if request.user.role == 'admin':
+            profile.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        elif request.user.role == 'event_management':
+            if profile.account.id == self.request.user.id:
+                profile.delete()
+                return Response(status=status.HTTP_204_NO_CONTENT)
+            else:
+                raise PermissionDenied("You are not allowed to delete this object.")
+        else:
+            raise PermissionDenied("You are not allowed to delete this object.")
+        
