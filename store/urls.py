@@ -4,7 +4,8 @@ from .import views
 from .views import PopularityViewSetList
 
 urlpatterns = [
-    path('popular/', PopularityViewSetList.as_view(), name='popular-product-list')
+    path('popular/', PopularityViewSetList.as_view(), name='popular-product-list'),
+    # path('event_management/subcategory/<int:subcategory_id>/',EventManagementSubcategoryAPIView.as_view()),
     
 ]
 
@@ -19,6 +20,7 @@ router.register('notification',views.NotificationViewSet)
 router.register('enquiry',views.EnquiryViewSet)
 router.register('inbox',views.InboxViewSet)
 router.register('profile_pic',views.ProfileViewSet)
+# router.register('eventteamlistsubcatagory',views.EventManagementSubcategoryViewSet,basename='MyModel')
 
 
 

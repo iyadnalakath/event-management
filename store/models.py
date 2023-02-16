@@ -40,6 +40,10 @@ class SubCatagory(BaseModel):
 #     def __str__(self):
         # return self.name
 
+class ProfilePic(BaseModel):
+    account = models.ForeignKey(Account,on_delete=models.PROTECT,related_name='profile',null=True,blank=True)
+    profile_pic=models.ImageField(upload_to ='mediafiles',default="",null=True,blank=True)
+    more_photos=models.ImageField(upload_to ='mediafiles',default="",null=True,blank=True)
 
 class Service(BaseModel):
     service_name=models.CharField(max_length=50,null=True,blank=True)
@@ -51,6 +55,9 @@ class Service(BaseModel):
     account = models.ForeignKey(Account,on_delete=models.CASCADE,related_name='event_team')
     popularity = models.FloatField(default=0.0)
     rating=models.DecimalField(max_digits=5, decimal_places=2,default=0.00)
+    # profile = models.ForeignKey(ProfilePic, on_delete=models.CASCADE, related_name='profile_view', null=True, blank=True)
+    # profile=models.ForeignKey(ProfilePic,on_delete=models.CASCADE,related_name='profiles',null=True,blank=True)
+    # profile=models.ForeignKey(ProfilePic,on_delete=models.CASCADE,related_name='profiles',null=True,blank=True)
 
     # def rating(self):
     #     rating = self.ratings.aggregate(Avg('rating'))
@@ -133,7 +140,3 @@ class Popularity(models.Model):
     #     else:
     #         self.popularity = 0.0
     #     self.save()
-class ProfilePic(BaseModel):
-    account = models.ForeignKey(Account,on_delete=models.PROTECT,related_name='profile',null=True,blank=True)
-    profile_pic=models.ImageField(upload_to ='mediafiles',default="",null=True,blank=True)
-    more_photos=models.ImageField(upload_to ='mediafiles',default="",null=True,blank=True)

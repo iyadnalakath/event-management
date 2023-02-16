@@ -14,7 +14,8 @@ from django.db.models import Count
 from rest_framework.filters import OrderingFilter,SearchFilter
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import generics
-
+from django.db.models import OuterRef, Subquery, Max, F
+from rest_framework.views import APIView
 
 
 
@@ -169,28 +170,148 @@ class ServiceViewSet(ModelViewSet):
     search_fields = ['service_name']
 
 
-
     def create(self, request, *args, **kwargs):
+            data = request.data.copy()
+            data["account"] = self.request.user.id
+
+            # Check if the user is an event_management
+            if self.request.user.role == 'event_management':
+                sub_catagory_id = data.get('sub_catagory')
+                account_id = self.request.user.id
+
+                # Check if a service with this sub_catagory and account already exists
+                if Service.objects.filter(sub_catagory=sub_catagory_id, account_id=account_id).exists():
+                    return Response({'error': 'You can only create one service in one sub_catagory, if you want add new serice or details you can update in your current service section or delete your current service and add new service details'}, status=status.HTTP_400_BAD_REQUEST)
+
+            serializer = ServiceSerializer(data=data)
+
+            if serializer.is_valid():
+                if self.request.user.role in ['admin', 'event_management']:
+                    serializer.save()
+                    return Response(serializer.data, status=status.HTTP_201_CREATED)
+                else:
+                    raise PermissionDenied("You are not allowed to create this object.")
+            else:
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    # def update(self, request, *args, **kwargs):
+    #     instance = self.get_object()
+    #     data = request.data.copy()
+    #     data["account"]=self.request.user.id
+    #     # Check if the current user created this service
+    #     if instance.account != self.request.user:
+    #         raise PermissionDenied("You are not allowed to update this object.")
+    #     else:
+    #         serializer = self.get_serializer(instance, data, partial=kwargs.get('partial', False))
+    #         serializer.is_valid(raise_exception=True)
+
+    #         serializer.save()
+    #         return Response(serializer.data)
+        
+
+    def update(self, request, *args, **kwargs):
+        service = self.get_object()
+        data = request.data.copy()
+        data["account"]=self.request.user.id
+        # data[""]
+        serializer = ServiceSerializer(service, data)
+        if serializer.is_valid():
+            if request.user.role == 'event_management':
+                if service.account.id == self.request.user.id:
+                    
+                    serializer.save()
+                    return Response(serializer.data)
+                else:
+                    raise PermissionDenied("You are not allowed to update this object.")
+            else:
+                raise PermissionDenied("only autherised team allowed to update it")
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    # def create(self, request, *args, **kwargs):
 
         
    
-        data = request.data.copy()
-        # print (self.request.user.role)
-        data["account"]=self.request.user.id
+    #     data = request.data.copy()
+    #     # print (self.request.user.role)
+    #     data["account"]=self.request.user.id
         
-        serializer = ServiceSerializer(data=data)
+    #     serializer = ServiceSerializer(data=data)
         
-        if serializer.is_valid():
-            # print (self.request.user.role)
-            if self.request.user.role in ['admin','event_management']:
+    #     if serializer.is_valid():
+    #         # print (self.request.user.role)
+    #         if self.request.user.role in ['admin','event_management']:
                 
-                # serializer.save(event_team=self.request.user)
-                serializer.save()
-                return Response(serializer.data, status=status.HTTP_201_CREATED)
-            else:
-                raise PermissionDenied("You are not allowed to create this object.")
+    #             # serializer.save(event_team=self.request.user)
+    #             serializer.save()
+    #             return Response(serializer.data, status=status.HTTP_201_CREATED)
+    #         else:
+    #             raise PermissionDenied("You are not allowed to create this object.")
+    #     else:
+    #         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+        
+    def list(self, request, *args, **kwargs):
+        # queryset = self.filter_queryset(queryset)
+        queryset=self.get_queryset()
+        queryset = self.filter_queryset(queryset)
+        
+        # if self.request.user.role in ['admin', 'customer'] and request.GET.get('sub_catagory'):
+        if self.request.GET.get('sub_catagory'):
+            sub_catagory=self.request.GET.get('sub_catagory')
+            queryset=queryset.filter(sub_catagory=sub_catagory)
+            # subquery = Service.objects.filter(account=OuterRef('account_id'))
+            # queryset=queryset.filter(sub_catagory=sub_catagory)
+            serializer=ServiceSerializer(queryset,many=True)
+            # return super().list(request, *args, **kwargs)
+            return Response (serializer.data,status=status.HTTP_200_OK)
+        elif self.request.user.role == 'event_management':
+            queryset = queryset.filter(account=self.request.user)
+            serializer = ServiceSerializer(queryset, many=True)
+            return Response(serializer.data)
+        elif self.request.user.role in ['admin', 'customer']:
+            return super().list(request, *args, **kwargs)
+
         else:
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            raise PermissionDenied("You are not allowed to retrieve this object.")
+
+    # def list(self, request, *args, **kwargs):
+    #     # Get the base queryset and filter it with the filter_backends
+    #     queryset = self.filter_queryset(self.get_queryset())
+
+    #     # Get the sub-category ID from the query string, if it exists
+    #     sub_category_id = self.request.GET.get('sub_catagory')
+    #     if sub_category_id:
+    #         # If a sub-category ID is specified, filter the queryset to include only services in that sub-category
+    #         queryset = queryset.filter(sub_catagory=sub_category_id)
+    #     elif self.request.user.role == 'event_management':
+    #         # If the user is an event manager, filter the queryset to include only services associated with their account
+    #         queryset = queryset.filter(account=self.request.user)
+    #     else:
+    #         # Otherwise, use the default behavior of the superclass (list all services)
+    #         return super().list(request, *args, **kwargs)
+
+    #     # Use a subquery to group the services by event team and select the maximum rating for each group
+    #     subquery = Service.objects.filter(
+    #         account=OuterRef('account_id')
+    #     ).values('account_id').annotate(
+    #         max_rating=Max('ratings')
+    #     ).values('max_rating')
+
+    #     # Filter the queryset to include only the services with the maximum rating for each event team
+    #     queryset = queryset.filter(
+    #         rating__in=Subquery(subquery)
+    #     )
+
+    #     # Serialize the filtered queryset and return it in a Response object
+    #     serializer = ServiceSerializer(queryset, many=True)
+    #     return Response(serializer.data)
+
+
+
+
+
+
 
     # def create(self, request, *args, **kwargs):
     #     data = request.data.copy()
@@ -213,30 +334,6 @@ class ServiceViewSet(ModelViewSet):
     #         return Response(serializer.data)
     #     else:
     #         raise PermissionDenied("You are not allowed to retrieve this object.")
-        
-    def list(self, request, *args, **kwargs):
-        # queryset = self.filter_queryset(queryset)
-        queryset=self.get_queryset()
-        queryset = self.filter_queryset(queryset)
-        
-        # if self.request.user.role in ['admin', 'customer'] and request.GET.get('sub_catagory'):
-        if self.request.GET.get('sub_catagory'):
-            sub_catagory=self.request.GET.get('sub_catagory')
-            queryset=queryset.filter(sub_catagory=sub_catagory)
-            # queryset=queryset.filter(sub_catagory=sub_catagory)
-            serializer=ServiceSerializer(queryset,many=True)
-            # return super().list(request, *args, **kwargs)
-            return Response (serializer.data,status=status.HTTP_200_OK)
-        elif self.request.user.role == 'event_management':
-            queryset = queryset.filter(account=self.request.user)
-            serializer = ServiceSerializer(queryset, many=True)
-            return Response(serializer.data)
-        elif self.request.user.role in ['admin', 'customer']:
-            return super().list(request, *args, **kwargs)
-
-        else:
-            raise PermissionDenied("You are not allowed to retrieve this object.")
-
         
     
         
@@ -270,20 +367,6 @@ class ServiceViewSet(ModelViewSet):
     #     #     return super().list(request, *args, **kwargs)
     #     else:
     #         raise PermissionDenied("You are not the owner of this service.")
-
-    def update(self, request, *args, **kwargs):
-        service = self.get_object()
-        serializer = ServiceSerializer(service, data=request.data)
-        if serializer.is_valid():
-            if request.user.role == 'event_management':
-                if service.account.id == self.request.user.id:
-                    serializer.save()
-                    return Response(serializer.data)
-                else:
-                    raise PermissionDenied("You are not allowed to update this object.")
-            else:
-                raise PermissionDenied("only autherised team allowed to update it")
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
     def destroy(self, request, *args, **kwargs):
         service = self.get_object()
@@ -298,7 +381,6 @@ class ServiceViewSet(ModelViewSet):
                 raise PermissionDenied("You are not allowed to delete this object.")
         else:
             raise PermissionDenied("You are not allowed to delete this object.")
-        
 
 class RatingViewSet(ModelViewSet):
     queryset = Rating.objects.all()
@@ -694,10 +776,13 @@ class ProfileViewSet(ModelViewSet):
 
     def update(self, request, *args, **kwargs):
         profile = self.get_object()
-        serializer = ProfileSerializer(profile, data=request.data)
+        data = request.data.copy()
+        data["account"]=self.request.user.id
+        serializer = ProfileSerializer(profile, data)
         if serializer.is_valid():
             if request.user.role == 'event_management':
                 if profile.account.id == self.request.user.id:
+                    
                     serializer.save()
                     return Response(serializer.data)
                 else:
