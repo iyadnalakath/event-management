@@ -5,7 +5,7 @@ from .views import PopularityViewSetList
 
 urlpatterns = [
     path('popular/', PopularityViewSetList.as_view(), name='popular-product-list'),
-    # path('event_management/subcategory/<int:subcategory_id>/',EventManagementSubcategoryAPIView.as_view()),
+
     
 ]
 

@@ -173,9 +173,13 @@ class ServiceViewSet(ModelViewSet):
     def create(self, request, *args, **kwargs):
             data = request.data.copy()
             data["account"] = self.request.user.id
-
+            # data["profile"]= data.prefetch_related(
+            #     'profiles').filter(photos__account_id=F('account_id'))
+            
+       
+  
             # Check if the user is an event_management
-            if self.request.user.role == 'event_management':
+            if self.request.user.role == 'event_management':               
                 sub_catagory_id = data.get('sub_catagory')
                 account_id = self.request.user.id
 
@@ -256,8 +260,10 @@ class ServiceViewSet(ModelViewSet):
         queryset=self.get_queryset()
         queryset = self.filter_queryset(queryset)
         
+        
         # if self.request.user.role in ['admin', 'customer'] and request.GET.get('sub_catagory'):
         if self.request.GET.get('sub_catagory'):
+            
             sub_catagory=self.request.GET.get('sub_catagory')
             queryset=queryset.filter(sub_catagory=sub_catagory)
             # subquery = Service.objects.filter(account=OuterRef('account_id'))
@@ -751,6 +757,7 @@ class ProfileViewSet(ModelViewSet):
     def create(self, request, *args, **kwargs):
         data = request.data.copy()
         data["account"]=self.request.user.id
+  
         serializer = ProfileSerializer(data=data)
 
         if serializer.is_valid():
@@ -778,6 +785,7 @@ class ProfileViewSet(ModelViewSet):
         profile = self.get_object()
         data = request.data.copy()
         data["account"]=self.request.user.id
+    
         serializer = ProfileSerializer(profile, data)
         if serializer.is_valid():
             if request.user.role == 'event_management':
@@ -805,3 +813,4 @@ class ProfileViewSet(ModelViewSet):
         else:
             raise PermissionDenied("You are not allowed to delete this object.")
         
+
