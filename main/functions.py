@@ -5,20 +5,18 @@ from threading import Thread
 import requests
 
 
-
-
-
-
 class ThreadWithReturnValue(Thread):
-    def __init__(self, group=None, target=None, name=None,
-                 args=(), kwargs={}, Verbose=None):
+    def __init__(
+        self, group=None, target=None, name=None, args=(), kwargs={}, Verbose=None
+    ):
         Thread.__init__(self, group, target, name, args, kwargs)
         self._return = None
+
     def run(self):
         # print(type(self._target))
         if self._target is not None:
-            self._return = self._target(*self._args,
-                                                **self._kwargs)
+            self._return = self._target(*self._args, **self._kwargs)
+
     def join(self, *args):
         Thread.join(self, *args)
         return self._return
@@ -58,12 +56,13 @@ class ThreadWithReturnValue(Thread):
 
 def get_auto_id(model):
     auto_id = 1
-    latest_auto_id =  model.objects.all().order_by("-auto_id")[:1]
+    latest_auto_id = model.objects.all().order_by("-auto_id")[:1]
     if latest_auto_id:
         for auto in latest_auto_id:
             auto_id = auto.auto_id + 1
     print(auto_id)
     return auto_id
+
 
 # def get_auto_id(model):
 #     year = str(datetime.now().date().year)
@@ -80,17 +79,17 @@ def get_auto_id(model):
 #                 if(int(arr[0])>count):
 #                     count = arr[0]
 #             x = int(count) + 1
-#             auto_id =  str(x) + "-" + year  
+#             auto_id =  str(x) + "-" + year
 #     return auto_id
 
 
 # def get_ref_id(model):
 #     ref_id = 1
 #     latest_ref_id = model.objects.all().order_by("-ref_id")[:1]
-    
+
 #     if latest_ref_id:
 #         for ref in latest_ref_id:
-#             ref_id = ref.ref_id + 1       
+#             ref_id = ref.ref_id + 1
 #     return ref_id
 
 
@@ -103,24 +102,23 @@ def get_auto_id(model):
 #     return pk_id
 
 
-
 # def get_timezone(request):
 #     if "set_user_timezone" in request.session:
 #         user_time_zone = request.session['set_user_timezone']
 #     else:
 #         user_time_zone = "Asia/Kolkata"
 #     return user_time_zone
- 
-# def sendSMS(phone, message,):
-    # data =  urllib.parse.urlencode({'apikey': apikey, 'numbers': numbers,
-    #     'message' : message, 'sender': sender,})
-    # data = data.encode('utf-8')
-    # request = urllib.request.Request("https://api.textlocal.in/send/?")
-    # f = urllib.request.urlopen(request, data)
-    # fr = f.read()
 
-    # print(message)
-    # return(True)
+# def sendSMS(phone, message,):
+# data =  urllib.parse.urlencode({'apikey': apikey, 'numbers': numbers,
+#     'message' : message, 'sender': sender,})
+# data = data.encode('utf-8')
+# request = urllib.request.Request("https://api.textlocal.in/send/?")
+# f = urllib.request.urlopen(request, data)
+# fr = f.read()
+
+# print(message)
+# return(True)
 
 
 # def send_common_mail(html_context,to_email,subject,template):
@@ -131,12 +129,9 @@ def get_auto_id(model):
 #             "subject": subject,
 #             "html_data": html_content
 #         })
-    
+
 #     t1 = ThreadWithReturnValue(target=func,args=(html_context,to_email,subject,template))
 #     t1.start()
-
-
-
 
 
 # def sendSMS(apikey, numbers, sender, message,):
@@ -149,33 +144,22 @@ def get_auto_id(model):
 #     return(fr)
 
 
-
-
-
-
-
-
-
-
-
-def send_common_mail(html_context,to_email,subject):
-    def func(html_context,to_email,subject):
-        html_content = render_to_string('email_templates/common_template1.html', html_context)
-        r = requests.post('https://mail-sender.vingb.com/custom-mail/487c8896-fe55-456d-96e8-88b2fd18f098', data={
-            "to_email": to_email,
-            "subject": subject,
-            "html_data": html_content
-        }
+def send_common_mail(html_context, to_email, subject):
+    def func(html_context, to_email, subject):
+        html_content = render_to_string(
+            "email_templates/common_template1.html", html_context
         )
-    t1 = ThreadWithReturnValue(target=func,args=(html_context,to_email,subject))
-    t1.start()
+        r = requests.post(
+            "https://mail-sender.vingb.com/custom-mail/487c8896-fe55-456d-96e8-88b2fd18f098",
+            data={"to_email": to_email, "subject": subject, "html_data": html_content},
+        )
 
+    t1 = ThreadWithReturnValue(target=func, args=(html_context, to_email, subject))
+    t1.start()
 
 
 def password_generater(length):
     length = 8
-    chars = string.ascii_letters + string.digits + '!@#$%^&*()'
+    chars = string.ascii_letters + string.digits + "!@#$%^&*()"
     rnd = random.SystemRandom()
-    return(''.join(rnd.choice(chars) for i in range(length)))
-
-
+    return "".join(rnd.choice(chars) for i in range(length))

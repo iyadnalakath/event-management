@@ -14,23 +14,24 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path,include
+from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from rest_framework_swagger.views import get_swagger_view
 import debug_toolbar
+
 # from account.urls import urlpatterns as accounts_urlpatterns
 
-schema_view = get_swagger_view(title='event_management API')
+schema_view = get_swagger_view(title="event_management API")
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('__debug__/', include(debug_toolbar.urls)),
-    path('api_documentation/', schema_view),
-    path('projectaccount/', include('projectaccount.urls')),
-    path('store/', include('store.urls')),
-    path('auth/', include('djoser.urls')),
-    path('auth/', include('djoser.urls.authtoken')),
+    path("admin/", admin.site.urls),
+    path("__debug__/", include(debug_toolbar.urls)),
+    path("api_documentation/", schema_view),
+    path("projectaccount/", include("projectaccount.urls")),
+    path("store/", include("store.urls")),
+    path("auth/", include("djoser.urls")),
+    path("auth/", include("djoser.urls.authtoken")),
 ]
 
 # urlpatterns += accounts_urlpatterns

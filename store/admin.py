@@ -3,94 +3,58 @@ from .models import *
 
 # Register your models here.
 
-class AreaAdmin(admin.ModelAdmin):
-    list_display=(
-        'id',
-        'area'
 
-    )
-admin.site.register(Area,AreaAdmin)
+class AreaAdmin(admin.ModelAdmin):
+    list_display = ("id", "area")
+
+
+admin.site.register(Area, AreaAdmin)
 
 
 class SubCatagoryAdmin(admin.ModelAdmin):
-    list_display=(
-        'id',
-        'sub_catagory_name',
-        'image'
-        
+    list_display = ("id", "sub_catagory_name", "image")
 
-    )
-admin.site.register(SubCatagory,SubCatagoryAdmin)
+
+admin.site.register(SubCatagory, SubCatagoryAdmin)
 
 
 class ServiceAdmin(admin.ModelAdmin):
-    list_display=(
-        'id',
-        'service_name',
-        'sub_catagory',
-        'amount',
-        'account'
+    list_display = ("id", "service_name", "sub_catagory", "amount", "account")
 
 
-        
+admin.site.register(Service, ServiceAdmin)
 
-    )
-admin.site.register(Service,ServiceAdmin)
 
 class RatingAdmin(admin.ModelAdmin):
-    list_display=(
-        'id',
-        'rating',
-        'service',
-        'review',
-        'created_at',
-        'customer'
+    list_display = ("id", "rating", "service", "review", "created_at", "customer")
 
-    )
-admin.site.register(Rating,RatingAdmin)
+
+admin.site.register(Rating, RatingAdmin)
+
 
 class NotificationAdmin(admin.ModelAdmin):
-    list_display=(
-        'id',
-        'notification',
-        'subject',
-        'date'
-    )
-admin.site.register(Notification,NotificationAdmin)
+    list_display = ("id", "notification", "subject", "date")
+
+
+admin.site.register(Notification, NotificationAdmin)
+
 
 class ProfilePicAdmin(admin.ModelAdmin):
-    list_display=(
-        'id',
-        'account',
-        'profile_pic',
-        'more_photos'
+    list_display = ("id", "account", "profile_pic", "more_photos")
 
 
-    )
-admin.site.register(ProfilePic,ProfilePicAdmin)
+admin.site.register(ProfilePic, ProfilePicAdmin)
 
 
 class EnquiryAdmin(admin.ModelAdmin):
-    list_display=(
-        'id',
-        'service',
-        'name',
-        'phone',
-        'created_at'
+    list_display = ("id", "service", "name", "phone", "created_at")
 
 
-    )
-admin.site.register(Enquiry,EnquiryAdmin)
+admin.site.register(Enquiry, EnquiryAdmin)
+
 
 class InboxAdmin(admin.ModelAdmin):
-    list_display=(
-        'id',
-        'service',
-        'email',
-        'subject',
-        'message',
-        'date'
+    list_display = ("id", "service", "email", "subject", "message", "date")
 
 
-    )
-admin.site.register(Inbox,InboxAdmin)
+admin.site.register(Inbox, InboxAdmin)

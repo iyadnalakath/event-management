@@ -8,16 +8,9 @@ from projectaccount.models import Account
 class AreaSerializer(serializers.ModelSerializer):
     class Meta:
         model = Area
-        fields = [
+        fields = ["id", "area"]
 
-            'id',
-            'area'
-
-        ]
-
-        extra_kwargs = {
-            'auto_id': {'read_only': True}
-        }
+        extra_kwargs = {"auto_id": {"read_only": True}}
 
     def create(self, validated_data):
         area = Area.objects.create(
@@ -58,16 +51,13 @@ class SubCatagorySerializer(serializers.ModelSerializer):
     class Meta:
         model = SubCatagory
         fields = [
-
-            'id',
-            'sub_catagory_name',
+            "id",
+            "sub_catagory_name",
             # 'catagory',
-            'image'
+            "image",
         ]
 
-        extra_kwargs = {
-            'auto_id': {'read_only': True}
-        }
+        extra_kwargs = {"auto_id": {"read_only": True}}
 
     def create(self, validated_data):
         subcatagory = SubCatagory.objects.create(
@@ -106,20 +96,20 @@ class SubCatagorySerializer(serializers.ModelSerializer):
 #         )
 #         return  eventteam
 
+
 class EventTeamSerializer(serializers.ModelSerializer):
     class Meta:
         model = Account
         fields = [
-            'username',
-            'team_name',
-            'phone',
-            'place',
-            'work_time',
-            'over_view',
-            'address',
-            'district'
+            "username",
+            "team_name",
+            "phone",
+            "place",
+            "work_time",
+            "over_view",
+            "address",
+            "district"
             # 'profile_pic'
-
         ]
 
         def create(self, validated_data):
@@ -132,12 +122,14 @@ class EventTeamSerializer(serializers.ModelSerializer):
                 account = account_serializer.save()
 
             return account
+
+
 class ProfileEventTeamSerializer(serializers.ModelSerializer):
     class Meta:
         model = Account
         fields = [
-            'username',
-            'team_name',
+            "username",
+            "team_name",
             # 'phone',
             # 'place',
             # 'work_time',
@@ -145,7 +137,6 @@ class ProfileEventTeamSerializer(serializers.ModelSerializer):
             # 'address',
             # 'district'
             # 'profile_pic'
-
         ]
 
         def create(self, validated_data):
@@ -158,6 +149,7 @@ class ProfileEventTeamSerializer(serializers.ModelSerializer):
                 account = account_serializer.save()
 
             return account
+
     #     extra_kwargs={
     #         'auto_id':{'read_only':True}
     #     }
@@ -173,20 +165,12 @@ class ProfileEventTeamSerializer(serializers.ModelSerializer):
 
 class ProfileSerializer(serializers.ModelSerializer):
     # account_view = EventTeamSerializer(read_only=True, source='account')
-    account_view =ProfileEventTeamSerializer(read_only=True, source='account')
-    class Meta:
-        model=ProfilePic
-        fields=(
-            'id',
-            'account',
-            'account_view',
-            'profile_pic',
-            'more_photos'
+    account_view = ProfileEventTeamSerializer(read_only=True, source="account")
 
-        )
-        extra_kwargs = {
-            'auto_id': {'read_only': True}
-        }
+    class Meta:
+        model = ProfilePic
+        fields = ("id", "account", "account_view", "profile_pic", "more_photos")
+        extra_kwargs = {"auto_id": {"read_only": True}}
 
     def create(self, validated_data):
         profile_pic = ProfilePic.objects.create(
@@ -194,11 +178,12 @@ class ProfileSerializer(serializers.ModelSerializer):
             auto_id=get_auto_id(ProfilePic),
             # creator = self.context['request'].user
         )
-        return profile_pic                
-  
+        return profile_pic
+
+
 class ServiceSerializer(serializers.ModelSerializer):
     # event_team_name=serializers.CharField(source='event_team.name',read_only=True)
-    account_view = EventTeamSerializer(read_only=True, source='account')
+    account_view = EventTeamSerializer(read_only=True, source="account")
     # profile = ProfileSerializer(read_only=True)
     profile = serializers.SerializerMethodField()
 
@@ -206,27 +191,26 @@ class ServiceSerializer(serializers.ModelSerializer):
     # profile_pics= serializers.CharField(source='profile_pic.profile_pic',read_only=True)
     # account_view=serializers.CharField(source='account.username')
     sub_catagory_name = serializers.CharField(
-        source='sub_catagory.sub_catagory_name', read_only=True)
+        source="sub_catagory.sub_catagory_name", read_only=True
+    )
     # popularity = serializers.FloatField(read_only=True)
     # enquiry=EnquirySerializer(read_only=True,source='enquiries')
-
 
     class Meta:
         model = Service
         fields = [
-
-            'id',
-            'service_name',
+            "id",
+            "service_name",
             # 'event_team',
             # 'event_team_name',
-            'auto_id',
-            'sub_catagory',
-            'sub_catagory_name',
-            'amount',
-            'account',
-            'account_view',
-            'rating',
-            'profile',
+            "auto_id",
+            "sub_catagory",
+            "sub_catagory_name",
+            "amount",
+            "account",
+            "account_view",
+            "rating",
+            "profile",
             # 'popularity'
             # 'enquiry'
             # 'amount',
@@ -237,28 +221,21 @@ class ServiceSerializer(serializers.ModelSerializer):
             # 'work_time',
             # 'place',
             # 'over_view'
-
-
         ]
 
-
-
-        
-
         extra_kwargs = {
-            'auto_id': {'read_only': True},
-            'rating':{'read_only':True},
+            "auto_id": {"read_only": True},
+            "rating": {"read_only": True},
             # 'profile':{'read_only':True},
             # 'team_name':{'read_only':True},
             # 'work_time':{'read_only':True},
             # 'place':{'read_only':True},
             # 'over_view':{'read_only':True},
-
         }
+
     def get_profile(self, obj):
         profile = ProfilePic.objects.filter(account=obj.account).values()
         return profile
-
 
     def get_rating(self, obj):
         return obj.rating
@@ -267,10 +244,10 @@ class ServiceSerializer(serializers.ModelSerializer):
         service = Service.objects.create(
             **validated_data,
             auto_id=get_auto_id(Service),
-
             # creator = self.context['request'].user
         )
         return service
+
     # def create(self, validated_data):
     #     print("create ///.")
     #     account_serializer = EventTeamSerializer(data=validated_data["account"])
@@ -283,17 +260,16 @@ class ServiceSerializer(serializers.ModelSerializer):
     #         **validated_data,
     #         auto_id=get_auto_id(Service),
     #         # creator = self.context['request'].user
-    
-        
+
+
 class CustomerUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = Account
         fields = [
-            'username',
-            'full_name',
-            'phone'
+            "username",
+            "full_name",
+            "phone"
             # 'profile_pic'
-
         ]
 
         def create(self, validated_data):
@@ -301,7 +277,7 @@ class CustomerUserSerializer(serializers.ModelSerializer):
             validated_data["password"] = password
             validated_data["password2"] = password
 
-            account_serializer =CustomerUserSerializer(data=validated_data)
+            account_serializer = CustomerUserSerializer(data=validated_data)
             if account_serializer.is_valid():
                 account = account_serializer.save()
 
@@ -311,31 +287,25 @@ class CustomerUserSerializer(serializers.ModelSerializer):
 class RatingSerializer(serializers.ModelSerializer):
     # customer_view= CustomerUserSerializer(read_only=True,source='account')
     # account_view = EventTeamSerializer(read_only=True, source='account')
-    customer_view = serializers.CharField(
-        source='customer.username', read_only=True)
+    customer_view = serializers.CharField(source="customer.username", read_only=True)
+
     class Meta:
         model = Rating
         fields = [
-
-            'id',
+            "id",
             # 'user',
-            'service',
-            'rating',
-            'review',
-            'created_at',
-            'customer',
-            'customer_view'         
-            
+            "service",
+            "rating",
+            "review",
+            "created_at",
+            "customer",
+            "customer_view"
             # 'account'
-
         ]
         extra_kwargs = {
             # 'auto_id': {'read_only': True},
-            'customer_view ':{'read_only':True}
+            "customer_view ": {"read_only": True}
         }
-
-        
-
 
     def validate_rating(self, value):
         if value > 5.0 or value < 0.0:
@@ -346,19 +316,12 @@ class RatingSerializer(serializers.ModelSerializer):
         #     'name': {'read_only': True}
         # }
 
-   
+
 class NotificationSerializer(serializers.ModelSerializer):
     class Meta:
-        model=Notification
-        fields=[
-            'id',
-            'notification',
-            'subject',
-            'date'
-            ]
-        extra_kwargs = {
-            'auto_id': {'read_only': True}
-        }
+        model = Notification
+        fields = ["id", "notification", "subject", "date"]
+        extra_kwargs = {"auto_id": {"read_only": True}}
 
     def create(self, validated_data):
         notification = Notification.objects.create(
@@ -367,7 +330,6 @@ class NotificationSerializer(serializers.ModelSerializer):
             # creator = self.context['request'].user
         )
         return notification
-    
 
     #     extra_kwargs = {
     #         'auto_id': {'read_only': True}
@@ -380,47 +342,33 @@ class NotificationSerializer(serializers.ModelSerializer):
     #         # creator = self.context['request'].user
     #     )
     #     return enquiry
-    
+
+
 class EnquirySerializer(serializers.ModelSerializer):
     # service = ServiceSerializer(read_only=True)
     # service=serializers.CharField(source='service.service_name')
     class Meta:
         model = Enquiry
-        fields = ( 
-                    'id', 
-                    'service',
-                    'phone',
-                    'created_at',
-                    'name'
-        )
+        fields = ("id", "service", "phone", "created_at", "name")
+
 
 class InboxSerializer(serializers.ModelSerializer):
     class Meta:
-        model=Inbox
-        fields=(
-            'id',
-            'service',
-            'email',
-            'subject',
-            'message',
-            'date'
-        )
+        model = Inbox
+        fields = ("id", "service", "email", "subject", "message", "date")
+
 
 class PopularitySerializer(serializers.ModelSerializer):
     service = ServiceSerializer(source=Service)
-    event_management_name=serializers.CharField(source='service.account__team_name',read_only=True)
-    rating=serializers.FloatField(source='service.ratings__rating')
+    event_management_name = serializers.CharField(
+        source="service.account__team_name", read_only=True
+    )
+    rating = serializers.FloatField(source="service.ratings__rating")
+
     class Meta:
         model = Popularity
-        fields = (
-                'id',
-                'service',
-                'event_management_name',
-                'rating'              
+        fields = ("id", "service", "event_management_name", "rating")
 
-                     )
- 
-        
     #     extra_kwargs = {
     #         'auto_id': {'read_only': True}
     #     }
@@ -432,4 +380,3 @@ class PopularitySerializer(serializers.ModelSerializer):
     #         # creator = self.context['request'].user
     #     )
     #     return popularity
-
