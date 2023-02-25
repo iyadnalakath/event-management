@@ -216,10 +216,11 @@ class ServiceViewSet(ModelViewSet):
     #         serializer.save()
     #         return Response(serializer.data)
 
-    def update(self, request, *args, **kwargs):
+    def put(self, request, *args, **kwargs):
         service = self.get_object()
         data = request.data.copy()
         data["account"] = self.request.user.id
+        # data["sub_catagory"] = data.get("sub_catagory_id")
         # data[""]
         serializer = ServiceSerializer(service, data)
         if serializer.is_valid():

@@ -19,7 +19,7 @@ admin.site.register(SubCatagory, SubCatagoryAdmin)
 
 
 class ServiceAdmin(admin.ModelAdmin):
-    list_display = ("id", "service_name", "sub_catagory", "amount", "account")
+    list_display = ("id", "service_name", "sub_catagory","account")
 
 
 admin.site.register(Service, ServiceAdmin)

@@ -60,7 +60,7 @@ class Service(BaseModel):
     service_name = models.TextField(null=True, blank=True)
     # event_team=models.ForeignKey(EventTeam,on_delete=models.CASCADE)
     sub_catagory = models.ForeignKey(SubCatagory, on_delete=models.CASCADE)
-    amount = models.IntegerField(null=True, blank=True)
+    # amount = models.IntegerField(null=True, blank=True)
     # rating=models.IntegerField(null=True,blank=True)
     # is_featured=models.BooleanField(default=False)
     account = models.ForeignKey(

@@ -206,7 +206,7 @@ class ServiceSerializer(serializers.ModelSerializer):
             "auto_id",
             "sub_catagory",
             "sub_catagory_name",
-            "amount",
+            # "amount",
             "account",
             "account_view",
             "rating",
