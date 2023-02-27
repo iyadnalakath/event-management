@@ -202,37 +202,37 @@ class ServiceViewSet(ModelViewSet):
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    # def update(self, request, *args, **kwargs):
-    #     instance = self.get_object()
-    #     data = request.data.copy()
-    #     data["account"]=self.request.user.id
-    #     # Check if the current user created this service
-    #     if instance.account != self.request.user:
-    #         raise PermissionDenied("You are not allowed to update this object.")
-    #     else:
-    #         serializer = self.get_serializer(instance, data, partial=kwargs.get('partial', False))
-    #         serializer.is_valid(raise_exception=True)
-
-    #         serializer.save()
-    #         return Response(serializer.data)
-
-    def put(self, request, *args, **kwargs):
-        service = self.get_object()
+    def update(self, request, *args, **kwargs):
+        instance = self.get_object()
         data = request.data.copy()
-        data["account"] = self.request.user.id
-        # data["sub_catagory"] = data.get("sub_catagory_id")
-        # data[""]
-        serializer = ServiceSerializer(service, data)
-        if serializer.is_valid():
-            if request.user.role == "event_management":
-                if service.account.id == self.request.user.id:
-                    serializer.save()
-                    return Response(serializer.data)
-                else:
-                    raise PermissionDenied("You are not allowed to update this object.")
-            else:
-                raise PermissionDenied("only autherised team allowed to update it")
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        data["account"]=self.request.user.id
+        # Check if the current user created this service
+        if instance.account != self.request.user:
+            raise PermissionDenied("You are not allowed to update this object.")
+        else:
+            serializer = self.get_serializer(instance, data, partial=kwargs.get('partial', False))
+            serializer.is_valid(raise_exception=True)
+
+            serializer.save()
+            return Response(serializer.data)
+
+    # def update(self, request, *args, **kwargs):
+    #     service = self.get_object()
+    #     data = request.data.copy()
+    #     data["account"] = self.request.user.id
+    #     # data["sub_catagory"] = data.get("sub_catagory_id")
+    #     # data[""]
+    #     serializer = ServiceSerializer(service, data)
+    #     if serializer.is_valid():
+    #         if request.user.role == "event_management":
+    #             if service.account.id == self.request.user.id:
+    #                 serializer.save()
+    #                 return Response(serializer.data)
+    #             else:
+    #                 raise PermissionDenied("You are not allowed to update this object.")
+    #         else:
+    #             raise PermissionDenied("only autherised team allowed to update it")
+    #     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     # def create(self, request, *args, **kwargs):
 
