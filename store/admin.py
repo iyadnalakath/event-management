@@ -40,7 +40,7 @@ admin.site.register(Notification, NotificationAdmin)
 
 
 class ProfilePicAdmin(admin.ModelAdmin):
-    list_display = ("id", "account", "profile_pic", "more_photos")
+    list_display = ("id", "account", "more_photos")
 
 
 admin.site.register(ProfilePic, ProfilePicAdmin)

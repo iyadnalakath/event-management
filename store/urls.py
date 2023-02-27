@@ -18,6 +18,7 @@ router.register("notification", views.NotificationViewSet)
 router.register("enquiry", views.EnquiryViewSet)
 router.register("inbox", views.InboxViewSet)
 router.register("profile_pic", views.ProfileViewSet)
+router.register("team_profile", views.TeamProfileViewSet)
 # router.register('eventteamlistsubcatagory',views.EventManagementSubcategoryViewSet,basename='MyModel')
 
 

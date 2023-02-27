@@ -169,7 +169,7 @@ class ProfileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ProfilePic
-        fields = ("id", "account", "account_view", "profile_pic", "more_photos")
+        fields = ("id", "account", "account_view", "more_photos")
         extra_kwargs = {"auto_id": {"read_only": True}}
 
     def create(self, validated_data):
@@ -180,12 +180,29 @@ class ProfileSerializer(serializers.ModelSerializer):
         )
         return profile_pic
 
+class TeamProfileSerializer(serializers.ModelSerializer):
+    account_view = ProfileEventTeamSerializer(read_only=True, source="account")
+
+    class Meta:
+        model = TeamProfile
+        fields = ("id", "account", "account_view", "team_profile")
+        extra_kwargs = {"auto_id": {"read_only": True}}
+
+    def create(self, validated_data):
+        team_profile = TeamProfile.objects.create(
+            **validated_data,
+            auto_id=get_auto_id(TeamProfile),
+            # creator = self.context['request'].user
+        )
+        return team_profile
+
 
 class ServiceSerializer(serializers.ModelSerializer):
     # event_team_name=serializers.CharField(source='event_team.name',read_only=True)
     account_view = EventTeamSerializer(read_only=True, source="account")
     # profile = ProfileSerializer(read_only=True)
     profile = serializers.SerializerMethodField()
+    team_profilepic=serializers.SerializerMethodField()
 
     # profile_pics= ProfileSerializer(read_only=True,source='profile')
     # profile_pics= serializers.CharField(source='profile_pic.profile_pic',read_only=True)
@@ -211,6 +228,7 @@ class ServiceSerializer(serializers.ModelSerializer):
             "account_view",
             "rating",
             "profile",
+            "team_profilepic"
             # 'popularity'
             # 'enquiry'
             # 'amount',
@@ -235,6 +253,10 @@ class ServiceSerializer(serializers.ModelSerializer):
 
     def get_profile(self, obj):
         profile = ProfilePic.objects.filter(account=obj.account).values()
+        return profile
+    
+    def get_team_profilepic(self, obj):
+        profile = TeamProfile.objects.filter(account=obj.account).values()
         return profile
 
     def get_rating(self, obj):

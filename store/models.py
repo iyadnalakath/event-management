@@ -48,13 +48,19 @@ class ProfilePic(BaseModel):
     account = models.ForeignKey(
         Account, on_delete=models.PROTECT, related_name="profile", null=True, blank=True
     )
-    profile_pic = models.ImageField(
-        upload_to="mediafiles", default="", null=True, blank=True
-    )
+    # profile_pic = models.ImageField(
+    #     upload_to="mediafiles", default="", null=True, blank=True
+    # )
     more_photos = models.ImageField(
         upload_to="mediafiles", default="", null=True, blank=True
     )
-
+class TeamProfile(BaseModel):
+    account = models.ForeignKey(
+        Account, on_delete=models.PROTECT, related_name="team_profilepic", null=True, blank=True
+    )
+    team_profile = models.ImageField(
+        upload_to="mediafiles", default="", null=True, blank=True
+    )
 
 class Service(BaseModel):
     service_name = models.TextField(null=True, blank=True)
@@ -76,7 +82,13 @@ class Service(BaseModel):
         null=True,
         blank=True,
     )
-
+    team_profilepic = models.ForeignKey(
+        TeamProfile,
+        on_delete=models.CASCADE,
+        related_name="team_profiles",
+        null=True,
+        blank=True,
+    )
     # def rating(self):
     #     rating = self.ratings.aggregate(Avg('rating'))
     #     return rating.get('rating__avg')

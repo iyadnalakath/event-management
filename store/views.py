@@ -790,3 +790,80 @@ class ProfileViewSet(ModelViewSet):
                 raise PermissionDenied("You are not allowed to delete this object.")
         else:
             raise PermissionDenied("You are not allowed to delete this object.")
+
+
+
+
+
+
+
+class TeamProfileViewSet(ModelViewSet):
+    queryset = TeamProfile.objects.all()
+    serializer_class = TeamProfileSerializer
+    permission_classes = [IsAuthenticated]
+
+    def create(self, request, *args, **kwargs):
+        data = request.data.copy()
+        data["account"] = self.request.user.id
+
+        # serializer = TeamProfileSerializer(data=data)
+
+        existing_profile =TeamProfile.objects.first()
+
+        # If the user already has a profile, update it instead of creating a new one
+        if existing_profile:
+            serializer = TeamProfileSerializer(existing_profile, data=data)
+        else:
+            serializer = TeamProfileSerializer(data=data)
+
+        if serializer.is_valid():
+            if self.request.user.role in ["admin", "event_management"]:
+                serializer.save()
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            else:
+                return PermissionDenied("You are not allowed to create this object.")
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        if self.request.user.role in ["admin", "customer"]:
+            serializer = TeamProfileSerializer(queryset, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        elif self.request.user.role == "event_management":
+            queryset = queryset.filter(account=self.request.user)
+            serializer = TeamProfileSerializer(queryset, many=True)
+            return Response(serializer.data)
+        else:
+            raise PermissionDenied("You are not allowed to retrieve this object.")
+
+    def update(self, request, *args, **kwargs):
+        profile = self.get_object()
+        data = request.data.copy()
+        data["account"] = self.request.user.id
+
+        serializer = TeamProfileSerializer(profile, data)
+        if serializer.is_valid():
+            if request.user.role == "event_management":
+                if profile.account.id == self.request.user.id:
+                    serializer.save()
+                    return Response(serializer.data)
+                else:
+                    raise PermissionDenied("You are not allowed to update this object.")
+            else:
+                raise PermissionDenied("only autherised team allowed to update it")
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def destroy(self, request, *args, **kwargs):
+        profile = self.get_object()
+        if request.user.role == "admin":
+            profile.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        elif request.user.role == "event_management":
+            if profile.account.id == self.request.user.id:
+                profile.delete()
+                return Response(status=status.HTTP_204_NO_CONTENT)
+            else:
+                raise PermissionDenied("You are not allowed to delete this object.")
+        else:
+            raise PermissionDenied("You are not allowed to delete this object.")
