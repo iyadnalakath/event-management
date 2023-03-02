@@ -2,6 +2,7 @@ from rest_framework import serializers
 from django.contrib.auth import authenticate
 from .models import Account
 from django.contrib.auth.models import User
+from rest_framework.authtoken.models import Token
 
 
 class LoginSerializer(serializers.Serializer):
@@ -13,6 +14,16 @@ class LoginSerializer(serializers.Serializer):
         if user and user.is_active:
             return user
         raise serializers.ValidationError("Incorrect Credentials")
+
+    
+# class LoginSerializer(serializers.Serializer):
+#     username = serializers.CharField()
+#     password = serializers.CharField()
+
+
+
+
+
 
 
 class RegisterCustomerSerializer(serializers.ModelSerializer):

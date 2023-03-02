@@ -755,7 +755,7 @@ class ProfileViewSet(ModelViewSet):
             return Response(serializer.data, status=status.HTTP_200_OK)
         elif self.request.user.role == "event_management":
             queryset = queryset.filter(account=self.request.user)
-            serializer = ProfileSerializer(queryset, many=True)
+            serializer = ProfileSerializer(queryset, many=True,context={'request':self.request})
             return Response(serializer.data)
         else:
             raise PermissionDenied("You are not allowed to retrieve this object.")
@@ -832,7 +832,7 @@ class TeamProfileViewSet(ModelViewSet):
             return Response(serializer.data, status=status.HTTP_200_OK)
         elif self.request.user.role == "event_management":
             queryset = queryset.filter(account=self.request.user)
-            serializer = TeamProfileSerializer(queryset, many=True)
+            serializer = TeamProfileSerializer(queryset, many=True,context={'request':self.request})
             return Response(serializer.data)
         else:
             raise PermissionDenied("You are not allowed to retrieve this object.")
