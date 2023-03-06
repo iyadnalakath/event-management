@@ -317,13 +317,10 @@ class ServiceSerializer(serializers.ModelSerializer):
     def get_profile(self, obj):
         request = self.context.get("request")
         profile_pics = ProfilePic.objects.filter(account=obj.account)
-        urls = [profile.more_photos.url for profile in profile_pics]
+        urls = [(profile.more_photos.url, profile.id) for profile in profile_pics]
         if request:
-            urls = [request.build_absolute_uri(url) for url in urls]
+            urls = [(request.build_absolute_uri(url), id) for url, id in urls]
         return urls
-
-
-
 
 
     # def get_profile(self, obj):
