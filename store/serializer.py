@@ -314,16 +314,28 @@ class ServiceSerializer(serializers.ModelSerializer):
     #         else:
     #             return url
     #     return None
-
     def get_profile(self, obj):
         request = self.context.get("request")
-        profile = ProfilePic.objects.filter(account=obj.account).first()
-        if profile:
-            urls = [profile.more_photos.url]
-            if request:
-                urls = [request.build_absolute_uri(url) for url in urls]
-            return urls
-        return []
+        profile_pics = ProfilePic.objects.filter(account=obj.account)
+        urls = [profile.more_photos.url for profile in profile_pics]
+        if request:
+            urls = [request.build_absolute_uri(url) for url in urls]
+        return urls
+
+
+
+
+
+    # def get_profile(self, obj):
+    #     request = self.context.get("request")
+    #     profile = ProfilePic.objects.filter(account=obj.account).first()
+    #     if profile:
+    #         urls = [profile.more_photos.url]
+    #         if request:
+    #             urls = [request.build_absolute_uri(url) for url in urls]
+    #         return urls
+    #     return []
+
 
     def get_team_profilepic(self, obj):
         request = self.context.get("request")
