@@ -414,6 +414,7 @@ class RatingSerializer(serializers.ModelSerializer):
         extra_kwargs = {
             # 'auto_id': {'read_only': True},
             "customer_view ": {"read_only": True}
+            # "service": {"read_only": True}
         }
 
     def validate_rating(self, value):

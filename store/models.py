@@ -87,6 +87,8 @@ class Service(BaseModel):
         Account, on_delete=models.CASCADE, related_name="event_team"
     )
     popularity = models.FloatField(default=0.0)
+
+    
     rating = models.DecimalField(max_digits=5, decimal_places=2, default=0.00)
 
     profile = models.ForeignKey(

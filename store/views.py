@@ -431,6 +431,8 @@ class RatingViewSet(ModelViewSet):
     def create(self, request, *args, **kwargs):
         data = request.data.copy()
         data["customer"] = self.request.user.id
+        data["service"] = self.request.query_params.get('service')
+        # print(data["serivce"])
         serializer = RatingSerializer(data=data)
 
         if serializer.is_valid():
@@ -441,6 +443,19 @@ class RatingViewSet(ModelViewSet):
                 raise PermissionDenied("You are not allowed to create this object.")
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        queryset = self.filter_queryset(queryset)
+        if self.request.user.role in ["admin", "event_management","customer"]:
+            service = self.request.GET.get("service")
+            queryset = queryset.filter(service=service)
+            serializer = RatingSerializer(queryset, many=True)
+            # return super().list(request, *args, **kwargs)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+
+        else:
+            raise PermissionDenied("You are not allowed to retrieve this object.")
 
     def destroy(self, request, *args, **kwargs):
         rating = self.get_object()
