@@ -304,16 +304,26 @@ class ServiceSerializer(serializers.ModelSerializer):
             "rating": {"read_only": True},
         }
 
+    # def get_profile(self, obj):
+    #     request = self.context.get("request")
+    #     profile = ProfilePic.objects.filter(account=obj.account).first()
+    #     if profile:
+    #         url = profile.more_photos.url
+    #         if request:
+    #             return request.build_absolute_uri(url)
+    #         else:
+    #             return url
+    #     return None
+
     def get_profile(self, obj):
         request = self.context.get("request")
         profile = ProfilePic.objects.filter(account=obj.account).first()
         if profile:
-            url = profile.more_photos.url
+            urls = [profile.more_photos.url]
             if request:
-                return request.build_absolute_uri(url)
-            else:
-                return url
-        return None
+                urls = [request.build_absolute_uri(url) for url in urls]
+            return urls
+        return []
 
     def get_team_profilepic(self, obj):
         request = self.context.get("request")
