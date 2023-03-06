@@ -54,6 +54,13 @@ class ProfilePic(BaseModel):
     more_photos = models.ImageField(
         upload_to="mediafiles", default="", null=True, blank=True
     )
+
+    # @property
+    # def profile_pic(self):
+    #     if self.profile_pic:
+    #         return self.profile_pic.url
+    #     return None
+    
 class TeamProfile(BaseModel):
     account = models.ForeignKey(
         Account, on_delete=models.PROTECT, related_name="team_profilepic", null=True, blank=True
@@ -61,6 +68,13 @@ class TeamProfile(BaseModel):
     team_profile = models.ImageField(
         upload_to="mediafiles", default="", null=True, blank=True
     )
+# def get_team_profilepic(self, obj):
+#     team_profile = TeamProfile.objects.filter(account=obj.account).first()
+#     if team_profile:
+#         return team_profile.team_profile.url
+#     return None
+
+
 
 class Service(BaseModel):
     service_name = models.TextField(null=True, blank=True)

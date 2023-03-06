@@ -265,12 +265,12 @@ class ServiceViewSet(ModelViewSet):
             queryset = queryset.filter(sub_catagory=sub_catagory)
             # subquery = Service.objects.filter(account=OuterRef('account_id'))
             # queryset=queryset.filter(sub_catagory=sub_catagory)
-            serializer = ServiceSerializer(queryset, many=True)
+            serializer = ServiceSerializer(queryset, many=True,context={'request':self.request})
             # return super().list(request, *args, **kwargs)
             return Response(serializer.data, status=status.HTTP_200_OK)
         elif self.request.user.role == "event_management":
             queryset = queryset.filter(account=self.request.user)
-            serializer = ServiceSerializer(queryset, many=True)
+            serializer = ServiceSerializer(queryset, many=True,context={'request':self.request})
             return Response(serializer.data)
         elif self.request.user.role in ["admin", "customer"]:
             return super().list(request, *args, **kwargs)

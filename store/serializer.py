@@ -197,67 +197,135 @@ class TeamProfileSerializer(serializers.ModelSerializer):
         return team_profile
 
 
-class ServiceSerializer(serializers.ModelSerializer):
-    # event_team_name=serializers.CharField(source='event_team.name',read_only=True)
-    account_view = EventTeamSerializer(read_only=True, source="account")
-    # profile = ProfileSerializer(read_only=True)
-    profile = serializers.SerializerMethodField()
-    team_profilepic=serializers.SerializerMethodField()
+# class ServiceSerializer(serializers.ModelSerializer):
+#     # event_team_name=serializers.CharField(source='event_team.name',read_only=True)
+#     account_view = EventTeamSerializer(read_only=True, source="account")
+#     # profile = ProfileSerializer(read_only=True)
+#     profile = serializers.SerializerMethodField()
+#     team_profilepic=serializers.SerializerMethodField()
 
-    # profile_pics= ProfileSerializer(read_only=True,source='profile')
-    # profile_pics= serializers.CharField(source='profile_pic.profile_pic',read_only=True)
-    # account_view=serializers.CharField(source='account.username')
+#     # profile_pics= ProfileSerializer(read_only=True,source='profile')
+#     # profile_pics= serializers.CharField(source='profile_pic.profile_pic',read_only=True)
+#     # account_view=serializers.CharField(source='account.username')
+#     sub_catagory_name = serializers.CharField(
+#         source="sub_catagory.sub_catagory_name", read_only=True
+#     )
+#     # popularity = serializers.FloatField(read_only=True)
+#     # enquiry=EnquirySerializer(read_only=True,source='enquiries')
+
+#     class Meta:
+#         model = Service
+#         fields = [
+#             "id",
+#             "service_name",
+#             # 'event_team',
+#             # 'event_team_name',
+#             "auto_id",
+#             "sub_catagory",
+#             "sub_catagory_name",
+#             # "amount",
+#             "account",
+#             "account_view",
+#             "rating",
+#             "profile",
+#             "team_profilepic"
+#             # 'popularity'
+#             # 'enquiry'
+#             # 'amount',
+#             # 'rating',
+#             # 'is_featured',
+#             # 'event_team',
+#             # 'team_name',
+#             # 'work_time',
+#             # 'place',
+#             # 'over_view'
+#         ]
+
+#         extra_kwargs = {
+#             "auto_id": {"read_only": True},
+#             "rating": {"read_only": True},
+#             # 'profile':{'read_only':True},
+#             # 'team_name':{'read_only':True},
+#             # 'work_time':{'read_only':True},
+#             # 'place':{'read_only':True},
+#             # 'over_view':{'read_only':True},
+#         }
+
+#     def get_profile(self, obj):
+#         profile = ProfilePic.objects.filter(account=obj.account).values()
+#         return profile
+#         # if profile:
+#         #     return profile.profile_pic
+#         # return None
+    
+#     def get_team_profilepic(self, obj):
+#         profile = TeamProfile.objects.filter(account=obj.account).values()
+#         return profile
+
+#     def get_rating(self, obj):
+#         return obj.rating
+
+#     def create(self, validated_data):
+#         service = Service.objects.create(
+#             **validated_data,
+#             auto_id=get_auto_id(Service),
+#             # creator = self.context['request'].user
+#         )
+#         return service
+
+
+class ServiceSerializer(serializers.ModelSerializer):
+    account_view = EventTeamSerializer(read_only=True, source="account")
+
+    profile = serializers.SerializerMethodField()
+    team_profilepic = serializers.SerializerMethodField()
+
     sub_catagory_name = serializers.CharField(
         source="sub_catagory.sub_catagory_name", read_only=True
     )
-    # popularity = serializers.FloatField(read_only=True)
-    # enquiry=EnquirySerializer(read_only=True,source='enquiries')
 
     class Meta:
         model = Service
         fields = [
             "id",
             "service_name",
-            # 'event_team',
-            # 'event_team_name',
             "auto_id",
             "sub_catagory",
-            "sub_catagory_name",
-            # "amount",
+            "sub_catagory_name",    
             "account",
             "account_view",
             "rating",
             "profile",
             "team_profilepic"
-            # 'popularity'
-            # 'enquiry'
-            # 'amount',
-            # 'rating',
-            # 'is_featured',
-            # 'event_team',
-            # 'team_name',
-            # 'work_time',
-            # 'place',
-            # 'over_view'
         ]
 
         extra_kwargs = {
             "auto_id": {"read_only": True},
             "rating": {"read_only": True},
-            # 'profile':{'read_only':True},
-            # 'team_name':{'read_only':True},
-            # 'work_time':{'read_only':True},
-            # 'place':{'read_only':True},
-            # 'over_view':{'read_only':True},
         }
 
     def get_profile(self, obj):
-        profile = ProfilePic.objects.filter(account=obj.account).values()
-        return profile
-    
+        request = self.context.get("request")
+        profile = ProfilePic.objects.filter(account=obj.account).first()
+        if profile:
+            url = profile.more_photos.url
+            if request:
+                return request.build_absolute_uri(url)
+            else:
+                return url
+        return None
+
     def get_team_profilepic(self, obj):
-        profile = TeamProfile.objects.filter(account=obj.account).values()
-        return profile
+        request = self.context.get("request")
+        team_profile = TeamProfile.objects.filter(account=obj.account).first()
+        if team_profile:
+            url = team_profile.team_profile.url
+            if request:
+                return request.build_absolute_uri(url)
+            else:
+                return url
+        return None
+
 
     def get_rating(self, obj):
         return obj.rating
@@ -270,18 +338,18 @@ class ServiceSerializer(serializers.ModelSerializer):
         )
         return service
 
-    # def create(self, validated_data):
-    #     print("create ///.")
-    #     account_serializer = EventTeamSerializer(data=validated_data["account"])
+#     # def create(self, validated_data):
+#     #     print("create ///.")
+#     #     account_serializer = EventTeamSerializer(data=validated_data["account"])
 
-    #     if(account_serializer.is_valid()):
+#     #     if(account_serializer.is_valid()):
 
-    #         validated_data["account"] = account_serializer.save()
+#     #         validated_data["account"] = account_serializer.save()
 
-    #         service=Service.objects.create(
-    #         **validated_data,
-    #         auto_id=get_auto_id(Service),
-    #         # creator = self.context['request'].user
+#     #         service=Service.objects.create(
+#     #         **validated_data,
+#     #         auto_id=get_auto_id(Service),
+#     #         # creator = self.context['request'].user
 
 
 class CustomerUserSerializer(serializers.ModelSerializer):

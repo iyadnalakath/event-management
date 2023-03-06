@@ -3,6 +3,8 @@ from django.contrib.auth import authenticate
 from .models import Account
 from django.contrib.auth.models import User
 from rest_framework.authtoken.models import Token
+from rest_framework.response import Response
+from rest_framework import status
 
 
 class LoginSerializer(serializers.Serializer):
@@ -14,8 +16,48 @@ class LoginSerializer(serializers.Serializer):
         if user and user.is_active:
             return user
         raise serializers.ValidationError("Incorrect Credentials")
-
     
+
+# class LoginSerializer(serializers.Serializer):
+#     username = serializers.CharField()
+#     password = serializers.CharField(style={"input_type": "password"})
+
+#     def validate(self, data):
+#         user = authenticate(**data)
+#         if user and user.is_active:
+#             return user
+#         raise serializers.ValidationError("Incorrect Credentials")
+    
+
+# class LoginSerializer(serializers.Serializer):
+#     username = serializers.CharField(label=("Username"), write_only=True)
+#     password = serializers.CharField(label=("Password"), write_only=True)
+
+#     def create(self, validated_data):
+#         context = {}
+#         username = validated_data.get("username")
+        
+#         password = validated_data.get("password")
+#         account = authenticate(username=username, password=password)
+#         account.save()
+
+#         if account is not None:
+#             token, created = Token.objects.get_or_create(user=account)
+#             # account.save()
+#             context["response"] = "Successfully authenticated."
+#             # context["pk"] = user.pk
+#             context["username"] = username.lower()
+#             context["token"] = token.key
+#             # context["role"] = user.role
+#             context["response"] = "Successfully authenticated."
+#             return Response(context, status=status.HTTP_200_OK)
+            
+             
+#         else:
+#             raise serializers.ValidationError(
+#                 {"error_message": "The username or password is incorrect"}
+#             )
+
 # class LoginSerializer(serializers.Serializer):
 #     username = serializers.CharField()
 #     password = serializers.CharField()
