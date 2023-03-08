@@ -17,6 +17,8 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import generics
 from django.db.models import OuterRef, Subquery, Max, F
 from rest_framework.views import APIView
+from uuid import UUID
+from django.db.models import Q
 
 
 # Create your views here.
@@ -205,12 +207,14 @@ class ServiceViewSet(ModelViewSet):
     def update(self, request, *args, **kwargs):
         instance = self.get_object()
         data = request.data.copy()
-        data["account"]=self.request.user.id
+        data["account"] = self.request.user.id
         # Check if the current user created this service
         if instance.account != self.request.user:
             raise PermissionDenied("You are not allowed to update this object.")
         else:
-            serializer = self.get_serializer(instance, data, partial=kwargs.get('partial', False))
+            serializer = self.get_serializer(
+                instance, data, partial=kwargs.get("partial", False)
+            )
             serializer.is_valid(raise_exception=True)
 
             serializer.save()
@@ -265,12 +269,16 @@ class ServiceViewSet(ModelViewSet):
             queryset = queryset.filter(sub_catagory=sub_catagory)
             # subquery = Service.objects.filter(account=OuterRef('account_id'))
             # queryset=queryset.filter(sub_catagory=sub_catagory)
-            serializer = ServiceSerializer(queryset, many=True,context={'request':self.request})
+            serializer = ServiceSerializer(
+                queryset, many=True, context={"request": self.request}
+            )
             # return super().list(request, *args, **kwargs)
             return Response(serializer.data, status=status.HTTP_200_OK)
         elif self.request.user.role == "event_management":
             queryset = queryset.filter(account=self.request.user)
-            serializer = ServiceSerializer(queryset, many=True,context={'request':self.request})
+            serializer = ServiceSerializer(
+                queryset, many=True, context={"request": self.request}
+            )
             return Response(serializer.data)
         elif self.request.user.role in ["admin", "customer"]:
             return super().list(request, *args, **kwargs)
@@ -382,6 +390,97 @@ class RatingViewSet(ModelViewSet):
     serializer_class = RatingSerializer
     permission_classes = [IsAuthenticated]
 
+    def create(self, request, *args, **kwargs):
+        data = request.data.copy()
+        data["customer"] = self.request.user.id
+        data["service"] = self.request.query_params.get("service")
+        # print(data["serivce"])
+        serializer = RatingSerializer(data=data)
+
+        if serializer.is_valid():
+            if self.request.user.role in ["admin", "customer"]:
+                serializer.save()
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            else:
+                raise PermissionDenied("You are not allowed to create this object.")
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    # def list(self, request, *args, **kwargs):
+    #     queryset = self.get_queryset()
+    #     queryset = self.filter_queryset(queryset)
+    #     if self.request.user.role in ["admin", "event_management", "customer"]:
+    #         service = self.request.GET.get("service")
+    #         queryset = queryset.filter(service=service)
+    #         # queryset = queryset.filter(
+    #         #     Q(service__account=service) | Q(service_in=service)
+    #         # )
+    #         serializer = RatingSerializer(queryset, many=True)
+    #         # return super().list(request, *args, **kwargs)
+    #         return Response(serializer.data, status=status.HTTP_200_OK)
+
+    #     else:
+    #         raise PermissionDenied("You are not allowed to retrieve this object.")
+
+    # def list(self, request, *args, **kwargs):
+    #     queryset = self.get_queryset()
+    #     queryset = self.filter_queryset(queryset)
+    #     if self.request.user.role in ["admin", "event_management", "customer"]:
+    #         account_id = self.request.GET.get("account")
+    #         queryset = queryset.filter(
+    #             Q(service__account_id=account_id)
+    #             | Q(service__account__team_profilepic__team_members__id=account_id)
+    #         )
+    #         serializer = RatingSerializer(queryset, many=True)
+    #         return Response(serializer.data, status=status.HTTP_200_OK)
+    #     else:
+    #         raise PermissionDenied("You are not allowed to retrieve this object.")
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        queryset = self.filter_queryset(queryset)
+        if self.request.user.role in ["admin", "event_management", "customer"]:
+            account_id = self.request.GET.get("account")
+            queryset = queryset.filter(service__account_id=account_id)
+            serializer = RatingSerializer(queryset, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        else:
+            raise PermissionDenied("You are not allowed to retrieve this object.")
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        queryset = self.filter_queryset(queryset)
+        if self.request.user.role in ["admin", "event_management", "customer"]:
+            account_id = self.request.GET.get("account")
+            queryset = queryset.filter(service__account_id=account_id)
+
+            # Calculate the average rating
+            avg_rating = queryset.aggregate(Avg("rating"))["rating__avg"]
+
+            # Serialize the data including the average rating
+            serializer = RatingSerializer(queryset, many=True)
+            data = serializer.data
+            data.append({"avg_rating": avg_rating})
+
+            return Response(data, status=status.HTTP_200_OK)
+        else:
+            raise PermissionDenied("You are not allowed to retrieve this object.")
+
+    # def list(self, request, *args, **kwargs):
+    #     queryset = self.get_queryset()
+    #     queryset = self.filter_queryset(queryset)
+    #     if self.request.user.role in ["admin", "event_management", "customer"]:
+    #         account = self.request.GET.get("account")
+    #         event_team = Service.objects.filter(account_id=account)
+    #         queryset = queryset.filter(service__in=event_team)
+    #         serializer = RatingSerializer(queryset, many=True)
+    #         return Response(serializer.data, status=status.HTTP_200_OK)
+    #     else:
+    #         raise PermissionDenied("You are not allowed to retrieve this object.")
+
+    # serializer = RatingSerializer(queryset, many=True)
+    # return Response(serializer.data, status=status.HTTP_200_OK)
+
     # def create(self, request, *args, **kwargs):
 
     #     data = request.data.copy()
@@ -427,35 +526,6 @@ class RatingViewSet(ModelViewSet):
     #             raise PermissionDenied("You are not allowed to create this object.")
     #     else:
     #         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    def create(self, request, *args, **kwargs):
-        data = request.data.copy()
-        data["customer"] = self.request.user.id
-        data["service"] = self.request.query_params.get('service')
-        # print(data["serivce"])
-        serializer = RatingSerializer(data=data)
-
-        if serializer.is_valid():
-            if self.request.user.role in ["admin", "customer"]:
-                serializer.save()
-                return Response(serializer.data, status=status.HTTP_201_CREATED)
-            else:
-                raise PermissionDenied("You are not allowed to create this object.")
-        else:
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    def list(self, request, *args, **kwargs):
-        queryset = self.get_queryset()
-        queryset = self.filter_queryset(queryset)
-        if self.request.user.role in ["admin", "event_management","customer"]:
-            service = self.request.GET.get("service")
-            queryset = queryset.filter(service=service)
-            serializer = RatingSerializer(queryset, many=True)
-            # return super().list(request, *args, **kwargs)
-            return Response(serializer.data, status=status.HTTP_200_OK)
-
-        else:
-            raise PermissionDenied("You are not allowed to retrieve this object.")
 
     def destroy(self, request, *args, **kwargs):
         rating = self.get_object()
@@ -770,7 +840,9 @@ class ProfileViewSet(ModelViewSet):
             return Response(serializer.data, status=status.HTTP_200_OK)
         elif self.request.user.role == "event_management":
             queryset = queryset.filter(account=self.request.user)
-            serializer = ProfileSerializer(queryset, many=True,context={'request':self.request})
+            serializer = ProfileSerializer(
+                queryset, many=True, context={"request": self.request}
+            )
             return Response(serializer.data)
         else:
             raise PermissionDenied("You are not allowed to retrieve this object.")
@@ -807,11 +879,6 @@ class ProfileViewSet(ModelViewSet):
             raise PermissionDenied("You are not allowed to delete this object.")
 
 
-
-
-
-
-
 class TeamProfileViewSet(ModelViewSet):
     queryset = TeamProfile.objects.all()
     serializer_class = TeamProfileSerializer
@@ -823,7 +890,7 @@ class TeamProfileViewSet(ModelViewSet):
 
         # serializer = TeamProfileSerializer(data=data)
 
-        existing_profile =TeamProfile.objects.first()
+        existing_profile = TeamProfile.objects.first()
 
         # If the user already has a profile, update it instead of creating a new one
         if existing_profile:
@@ -847,7 +914,9 @@ class TeamProfileViewSet(ModelViewSet):
             return Response(serializer.data, status=status.HTTP_200_OK)
         elif self.request.user.role == "event_management":
             queryset = queryset.filter(account=self.request.user)
-            serializer = TeamProfileSerializer(queryset, many=True,context={'request':self.request})
+            serializer = TeamProfileSerializer(
+                queryset, many=True, context={"request": self.request}
+            )
             return Response(serializer.data)
         else:
             raise PermissionDenied("You are not allowed to retrieve this object.")
