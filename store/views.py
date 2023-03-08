@@ -436,16 +436,36 @@ class RatingViewSet(ModelViewSet):
     #     else:
     #         raise PermissionDenied("You are not allowed to retrieve this object.")
 
-    def list(self, request, *args, **kwargs):
-        queryset = self.get_queryset()
-        queryset = self.filter_queryset(queryset)
-        if self.request.user.role in ["admin", "event_management", "customer"]:
-            account_id = self.request.GET.get("account")
-            queryset = queryset.filter(service__account_id=account_id)
-            serializer = RatingSerializer(queryset, many=True)
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        else:
-            raise PermissionDenied("You are not allowed to retrieve this object.")
+    # def list(self, request, *args, **kwargs):
+    #     queryset = self.get_queryset()
+    #     queryset = self.filter_queryset(queryset)
+    #     if self.request.user.role in ["admin", "event_management", "customer"]:
+    #         account_id = self.request.GET.get("account")
+    #         queryset = queryset.filter(service__account_id=account_id)
+    #         serializer = RatingSerializer(queryset, many=True)
+    #         return Response(serializer.data, status=status.HTTP_200_OK)
+    #     else:
+    #         raise PermissionDenied("You are not allowed to retrieve this object.")
+
+# correct below
+    # def list(self, request, *args, **kwargs):
+    #     queryset = self.get_queryset()
+    #     queryset = self.filter_queryset(queryset)
+    #     if self.request.user.role in ["admin", "event_management", "customer"]:
+    #         account_id = self.request.GET.get("account")
+    #         queryset = queryset.filter(service__account_id=account_id)
+
+    #         # Calculate the average rating
+    #         avg_rating = queryset.aggregate(Avg("rating"))["rating__avg"]
+
+    #         # Serialize the data including the average rating
+    #         serializer = RatingSerializer(queryset, many=True)
+    #         data = serializer.data
+    #         data.append({"avg_rating": avg_rating})
+
+    #         return Response(data, status=status.HTTP_200_OK)
+    #     else:
+    #         raise PermissionDenied("You are not allowed to retrieve this object.")
 
     def list(self, request, *args, **kwargs):
         queryset = self.get_queryset()
@@ -457,12 +477,14 @@ class RatingViewSet(ModelViewSet):
             # Calculate the average rating
             avg_rating = queryset.aggregate(Avg("rating"))["rating__avg"]
 
-            # Serialize the data including the average rating
+            # Serialize the data
             serializer = RatingSerializer(queryset, many=True)
             data = serializer.data
-            data.append({"avg_rating": avg_rating})
 
-            return Response(data, status=status.HTTP_200_OK)
+            # Create a dictionary with the average rating
+            response_data = {"ratings": data, "avg_rating": avg_rating}
+
+            return Response(response_data, status=status.HTTP_200_OK)
         else:
             raise PermissionDenied("You are not allowed to retrieve this object.")
 
