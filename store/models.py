@@ -81,7 +81,7 @@ class Service(BaseModel):
     # event_team=models.ForeignKey(EventTeam,on_delete=models.CASCADE)
     sub_catagory = models.ForeignKey(SubCatagory, on_delete=models.CASCADE)
     # amount = models.IntegerField(null=True, blank=True)
-    # rating=models.IntegerField(null=True,blank=True)
+
     # is_featured=models.BooleanField(default=False)
     account = models.ForeignKey(
         Account, on_delete=models.CASCADE, related_name="event_team"
@@ -89,7 +89,7 @@ class Service(BaseModel):
     popularity = models.FloatField(default=0.0)
 
     
-    rating = models.DecimalField(max_digits=5, decimal_places=2, default=0.00)
+    # rating = models.DecimalField(max_digits=5, decimal_places=2, default=0.00)
 
     profile = models.ForeignKey(
         ProfilePic,
@@ -109,11 +109,11 @@ class Service(BaseModel):
     #     rating = self.ratings.aggregate(Avg('rating'))
     #     return rating.get('rating__avg')
 
-    def rating(self):
-        rating = self.ratings.aggregate(Avg("rating"))
-        self.rating = rating.get("rating__avg")
-        self.save()
-        return self.rating
+    # def rating(self):
+    #     rating = self.ratings.aggregate(Avg("rating"))
+    #     self.rating = rating.get("rating__avg")
+    #     self.save()
+    #     return self.rating
 
     def __str__(self) -> str:
         return self.service_name

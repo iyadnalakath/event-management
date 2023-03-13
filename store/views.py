@@ -159,11 +159,22 @@ class SubCatagoryViewSet(ModelViewSet):
 
 
 class ServiceViewSet(ModelViewSet):
-    queryset = (
-        Service.objects.select_related("sub_catagory")
-        .annotate(rating=Avg("ratings__rating"))
-        .filter(is_deleted=False)
-    )
+    # queryset = (
+    #     Service.objects.select_related("sub_catagory")
+    #     .annotate(rating=Avg("ratings__rating"))
+    #     .filter(is_deleted=False)
+    # )
+    queryset = Service.objects.all()
+    
+    def get_queryset(self):
+        queryset = super().get_queryset()
+
+        # prefetch ratings to avoid N+1 queries
+        queryset = queryset.prefetch_related("ratings")
+
+        # your other filtering and ordering code here
+        return queryset
+    
     serializer_class = ServiceSerializer
     permission_classes = [AllowAny]
     filter_backends = [DjangoFilterBackend, OrderingFilter, SearchFilter]
@@ -220,6 +231,49 @@ class ServiceViewSet(ModelViewSet):
             serializer.save()
             return Response(serializer.data)
 
+    def list(self, request, *args, **kwargs):
+        # queryset = self.filter_queryset(queryset)
+        queryset = self.get_queryset()
+        queryset = self.filter_queryset(queryset)
+
+        # if self.request.user.role in ['admin', 'customer'] and request.GET.get('sub_catagory'):
+        if self.request.GET.get("sub_catagory"):
+            sub_catagory = self.request.GET.get("sub_catagory")
+            queryset = queryset.filter(sub_catagory=sub_catagory)
+            # subquery = Service.objects.filter(account=OuterRef('account_id'))
+            # queryset=queryset.filter(sub_catagory=sub_catagory)
+            serializer = ServiceSerializer(
+                queryset, many=True, context={"request": self.request}
+            )
+            # return super().list(request, *args, **kwargs)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        elif self.request.user.role == "event_management":
+            queryset = queryset.filter(account=self.request.user)
+            serializer = ServiceSerializer(
+                queryset, many=True, context={"request": self.request}
+            )
+            return Response(serializer.data)
+        elif self.request.user.role in ["admin", "customer"]:
+            return super().list(request, *args, **kwargs)
+
+        else:
+            raise PermissionDenied("You are not allowed to retrieve this object.")
+        
+    def destroy(self, request, *args, **kwargs):
+        service = self.get_object()
+        if request.user.role == "admin":
+            service.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        elif request.user.role == "event_management":
+            if service.account.id == self.request.user.id:
+                service.delete()
+                return Response(status=status.HTTP_204_NO_CONTENT)
+            else:
+                raise PermissionDenied("You are not allowed to delete this object.")
+        else:
+            raise PermissionDenied("You are not allowed to delete this object.")
+        
+
     # def update(self, request, *args, **kwargs):
     #     service = self.get_object()
     #     data = request.data.copy()
@@ -258,33 +312,6 @@ class ServiceViewSet(ModelViewSet):
     #     else:
     #         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    def list(self, request, *args, **kwargs):
-        # queryset = self.filter_queryset(queryset)
-        queryset = self.get_queryset()
-        queryset = self.filter_queryset(queryset)
-
-        # if self.request.user.role in ['admin', 'customer'] and request.GET.get('sub_catagory'):
-        if self.request.GET.get("sub_catagory"):
-            sub_catagory = self.request.GET.get("sub_catagory")
-            queryset = queryset.filter(sub_catagory=sub_catagory)
-            # subquery = Service.objects.filter(account=OuterRef('account_id'))
-            # queryset=queryset.filter(sub_catagory=sub_catagory)
-            serializer = ServiceSerializer(
-                queryset, many=True, context={"request": self.request}
-            )
-            # return super().list(request, *args, **kwargs)
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        elif self.request.user.role == "event_management":
-            queryset = queryset.filter(account=self.request.user)
-            serializer = ServiceSerializer(
-                queryset, many=True, context={"request": self.request}
-            )
-            return Response(serializer.data)
-        elif self.request.user.role in ["admin", "customer"]:
-            return super().list(request, *args, **kwargs)
-
-        else:
-            raise PermissionDenied("You are not allowed to retrieve this object.")
 
     # def list(self, request, *args, **kwargs):
     #     # Get the base queryset and filter it with the filter_backends
@@ -370,19 +397,7 @@ class ServiceViewSet(ModelViewSet):
     #     else:
     #         raise PermissionDenied("You are not the owner of this service.")
 
-    def destroy(self, request, *args, **kwargs):
-        service = self.get_object()
-        if request.user.role == "admin":
-            service.delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
-        elif request.user.role == "event_management":
-            if service.account.id == self.request.user.id:
-                service.delete()
-                return Response(status=status.HTTP_204_NO_CONTENT)
-            else:
-                raise PermissionDenied("You are not allowed to delete this object.")
-        else:
-            raise PermissionDenied("You are not allowed to delete this object.")
+
 
 
 class RatingViewSet(ModelViewSet):
@@ -405,6 +420,59 @@ class RatingViewSet(ModelViewSet):
                 raise PermissionDenied("You are not allowed to create this object.")
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        queryset = self.filter_queryset(queryset)
+        if self.request.user.role in ["admin", "event_management", "customer"]:
+            account_id = self.request.GET.get("account")
+            queryset = queryset.filter(service__account_id=account_id)
+
+            # Calculate the average rating
+            avg_rating = queryset.aggregate(Avg("rating"))["rating__avg"]
+
+            # Serialize the data
+            serializer = RatingSerializer(queryset, many=True)
+            data = serializer.data
+
+            # Create a dictionary with the average rating
+            response_data = {"ratings": data, "avg_rating": avg_rating}
+
+            return Response(response_data, status=status.HTTP_200_OK)
+        else:
+            raise PermissionDenied("You are not allowed to retrieve this object.")
+
+
+    def destroy(self, request, *args, **kwargs):
+        rating = self.get_object()
+        if request.user.role == "admin":
+            rating.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        elif request.user.role == "customer":
+            if rating.customer.id == self.request.user.id:
+                rating.delete()
+                return Response(status=status.HTTP_204_NO_CONTENT)
+            else:
+                raise PermissionDenied("You are not allowed to delete this object.")
+        else:
+            raise PermissionDenied("You are not allowed to delete this object.")
+
+    def update(self, request, *args, **kwargs):
+        rating = self.get_object()
+        serializer = RatingSerializer(rating, data=request.data)
+        if serializer.is_valid():
+            if request.user.role == "customer":
+                if rating.customer.id == self.request.user.id:
+                    serializer.save()
+                    return Response(serializer.data)
+                else:
+                    raise PermissionDenied("You are not allowed to update this object.")
+            else:
+                raise PermissionDenied("only autherised team allowed to update it")
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
 
     # def list(self, request, *args, **kwargs):
     #     queryset = self.get_queryset()
@@ -467,27 +535,6 @@ class RatingViewSet(ModelViewSet):
     #     else:
     #         raise PermissionDenied("You are not allowed to retrieve this object.")
 
-    def list(self, request, *args, **kwargs):
-        queryset = self.get_queryset()
-        queryset = self.filter_queryset(queryset)
-        if self.request.user.role in ["admin", "event_management", "customer"]:
-            account_id = self.request.GET.get("account")
-            queryset = queryset.filter(service__account_id=account_id)
-
-            # Calculate the average rating
-            avg_rating = queryset.aggregate(Avg("rating"))["rating__avg"]
-
-            # Serialize the data
-            serializer = RatingSerializer(queryset, many=True)
-            data = serializer.data
-
-            # Create a dictionary with the average rating
-            response_data = {"ratings": data, "avg_rating": avg_rating}
-
-            return Response(response_data, status=status.HTTP_200_OK)
-        else:
-            raise PermissionDenied("You are not allowed to retrieve this object.")
-
     # def list(self, request, *args, **kwargs):
     #     queryset = self.get_queryset()
     #     queryset = self.filter_queryset(queryset)
@@ -549,33 +596,6 @@ class RatingViewSet(ModelViewSet):
     #     else:
     #         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    def destroy(self, request, *args, **kwargs):
-        rating = self.get_object()
-        if request.user.role == "admin":
-            rating.delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
-        elif request.user.role == "customer":
-            if rating.customer.id == self.request.user.id:
-                rating.delete()
-                return Response(status=status.HTTP_204_NO_CONTENT)
-            else:
-                raise PermissionDenied("You are not allowed to delete this object.")
-        else:
-            raise PermissionDenied("You are not allowed to delete this object.")
-
-    def update(self, request, *args, **kwargs):
-        rating = self.get_object()
-        serializer = RatingSerializer(rating, data=request.data)
-        if serializer.is_valid():
-            if request.user.role == "customer":
-                if rating.customer.id == self.request.user.id:
-                    serializer.save()
-                    return Response(serializer.data)
-                else:
-                    raise PermissionDenied("You are not allowed to update this object.")
-            else:
-                raise PermissionDenied("only autherised team allowed to update it")
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class NotificationViewSet(ModelViewSet):

@@ -272,6 +272,34 @@ class TeamProfileSerializer(serializers.ModelSerializer):
 #             # creator = self.context['request'].user
 #         )
 #         return service
+class RatingSerializer(serializers.ModelSerializer):
+    # customer_view= CustomerUserSerializer(read_only=True,source='account')
+    # account_view = EventTeamSerializer(read_only=True, source='account')
+    customer_view = serializers.CharField(source="customer.username", read_only=True)
+
+    class Meta:
+        model = Rating
+        fields = [
+            "id",
+            # 'user',
+            "service",
+            "rating",
+            "review",
+            "created_at",
+            "customer",
+            "customer_view"
+            # 'account'
+        ]
+        extra_kwargs = {
+            # 'auto_id': {'read_only': True},
+            "customer_view ": {"read_only": True}
+            # "service": {"read_only": True}
+        }
+
+    def validate_rating(self, value):
+        if value > 5.0 or value < 0.0:
+            raise serializers.ValidationError("Rating should be between 0.0 and 5.0")
+        return value
 
 
 class ServiceSerializer(serializers.ModelSerializer):
@@ -283,6 +311,7 @@ class ServiceSerializer(serializers.ModelSerializer):
     sub_catagory_name = serializers.CharField(
         source="sub_catagory.sub_catagory_name", read_only=True
     )
+    avg_ratings = serializers.SerializerMethodField()
 
     class Meta:
         model = Service
@@ -294,7 +323,7 @@ class ServiceSerializer(serializers.ModelSerializer):
             "sub_catagory_name",    
             "account",
             "account_view",
-            "rating",
+            "avg_ratings",
             "profile",
             "team_profilepic"
         ]
@@ -344,10 +373,26 @@ class ServiceSerializer(serializers.ModelSerializer):
             else:
                 return url
         return None
+    
+    # def get_avg_ratings(self, service):
+    #     request = self.context.get("request")
+    #     account_id = request.GET.get("account")
+    #     ratings = Rating.objects.filter(service__account_id=account_id)
+    #     if ratings.exists():
+    #         return ratings.aggregate(avg_ratings=Avg('rating'))['avg_rating']
+    #     else:
+    #         return None
 
+    def get_avg_ratings(self, service):
+        account_id = service.account_id
+        ratings = Rating.objects.filter(service__account_id=account_id)
+        if ratings.exists():
+            return ratings.aggregate(avg_ratings=Avg('rating'))['avg_ratings']
+        else:
+            return None
 
-    def get_rating(self, obj):
-        return obj.rating
+    # def get_rating(self, obj):
+    #     return obj.rating
 
     def create(self, validated_data):
         service = Service.objects.create(
@@ -356,19 +401,6 @@ class ServiceSerializer(serializers.ModelSerializer):
             # creator = self.context['request'].user
         )
         return service
-
-#     # def create(self, validated_data):
-#     #     print("create ///.")
-#     #     account_serializer = EventTeamSerializer(data=validated_data["account"])
-
-#     #     if(account_serializer.is_valid()):
-
-#     #         validated_data["account"] = account_serializer.save()
-
-#     #         service=Service.objects.create(
-#     #         **validated_data,
-#     #         auto_id=get_auto_id(Service),
-#     #         # creator = self.context['request'].user
 
 
 class CustomerUserSerializer(serializers.ModelSerializer):
@@ -393,34 +425,6 @@ class CustomerUserSerializer(serializers.ModelSerializer):
             return account
 
 
-class RatingSerializer(serializers.ModelSerializer):
-    # customer_view= CustomerUserSerializer(read_only=True,source='account')
-    # account_view = EventTeamSerializer(read_only=True, source='account')
-    customer_view = serializers.CharField(source="customer.username", read_only=True)
-
-    class Meta:
-        model = Rating
-        fields = [
-            "id",
-            # 'user',
-            "service",
-            "rating",
-            "review",
-            "created_at",
-            "customer",
-            "customer_view"
-            # 'account'
-        ]
-        extra_kwargs = {
-            # 'auto_id': {'read_only': True},
-            "customer_view ": {"read_only": True}
-            # "service": {"read_only": True}
-        }
-
-    def validate_rating(self, value):
-        if value > 5.0 or value < 0.0:
-            raise serializers.ValidationError("Rating should be between 0.0 and 5.0")
-        return value
 
         # extra_kwargs = {
         #     'name': {'read_only': True}
