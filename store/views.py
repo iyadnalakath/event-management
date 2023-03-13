@@ -5,7 +5,7 @@ from .serializer import *
 from .permission import IsAdmin
 from rest_framework.response import Response
 from rest_framework import status
-from rest_framework.permissions import IsAdminUser, IsAuthenticated, AllowAny
+from rest_framework.permissions import IsAdminUser, IsAuthenticated, AllowAny,IsAuthenticatedOrReadOnly
 from django.core.exceptions import PermissionDenied
 from .mixin import AdminOnlyMixin
 from django.shortcuts import get_object_or_404
@@ -176,7 +176,7 @@ class ServiceViewSet(ModelViewSet):
         return queryset
     
     serializer_class = ServiceSerializer
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticatedOrReadOnly]
     filter_backends = [DjangoFilterBackend, OrderingFilter, SearchFilter]
     filterset_fields = ["account__district"]
     ordering_fields = ["rating", "amount"]
@@ -403,7 +403,7 @@ class ServiceViewSet(ModelViewSet):
 class RatingViewSet(ModelViewSet):
     queryset = Rating.objects.all()
     serializer_class = RatingSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticatedOrReadOnly]
 
     def create(self, request, *args, **kwargs):
         data = request.data.copy()
@@ -426,7 +426,8 @@ class RatingViewSet(ModelViewSet):
     def list(self, request, *args, **kwargs):
         queryset = self.get_queryset()
         queryset = self.filter_queryset(queryset)
-        if self.request.user.role in ["admin", "event_management", "customer"]:
+        # if self.request.user.role in ["admin", "event_management", "customer"]:
+        if self.request.user:
             account_id = self.request.GET.get("account")
             queryset = queryset.filter(service__account_id=account_id)
 
@@ -666,7 +667,10 @@ class EnquiryViewSet(ModelViewSet):
     #     else:
     #         raise PermissionDenied("You are not the owner of this service.")
     def create(self, request, *args, **kwargs):
-        serializer = EnquirySerializer(data=request.data)
+        
+        data = request.data.copy()
+        data["service"] = self.request.query_params.get("service")
+        serializer = EnquirySerializer(data=data)
         if serializer.is_valid():
             # print (self.request.user.role
             #     )
@@ -739,7 +743,9 @@ class InboxViewSet(ModelViewSet):
     permission_classes = [IsAuthenticated]
 
     def create(self, request, *args, **kwargs):
-        serializer = InboxSerializer(data=request.data)
+        data = request.data.copy()
+        data["service"] = self.request.query_params.get("service")
+        serializer = InboxSerializer(data=data)
         if serializer.is_valid():
             # print (self.request.user.role
             #     )
