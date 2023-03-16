@@ -19,6 +19,7 @@ from django.db.models import OuterRef, Subquery, Max, F
 from rest_framework.views import APIView
 from uuid import UUID
 from django.db.models import Q
+from django.db.models.functions import Coalesce
 
 
 # Create your views here.
@@ -809,15 +810,34 @@ class InboxViewSet(ModelViewSet):
 #         return popularity_list
 
 
+# class PopularityViewSetList(generics.ListAPIView):
+#     queryset = (
+#         Service.objects.all()
+#         .annotate(rating=Avg("ratings__rating"))
+#         .order_by("-rating")
+#         .filter(is_deleted=False,)
+#     )
+#     serializer_class = ServiceSerializer
+#     permission_classes = [IsAuthenticated]
+
+
+
 class PopularityViewSetList(generics.ListAPIView):
-    queryset = (
-        Service.objects.all()
-        .annotate(rating=Avg("ratings__rating"))
-        .order_by("-rating")
-        .filter(is_deleted=False)
+    top_services = (
+        Service.objects.filter(account_id=OuterRef('account_id'))
+        .annotate(rating=Avg('ratings__rating'))
+        .order_by('-rating')
+        .values('id')[:1]
     )
+
+    queryset = (
+        Service.objects.filter(id__in=Subquery(top_services))
+        .annotate(rating=Avg('ratings__rating'))
+        .order_by('-rating')
+        .filter(is_deleted=False)
+)
     serializer_class = ServiceSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
 
     # def list(self, request, *args, **kwargs):
     #     queryset=self.get_queryset()
