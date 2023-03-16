@@ -144,14 +144,14 @@ class Enquiry(models.Model):
         Service, on_delete=models.CASCADE, related_name="enquiries"
     )
     # email=models.EmailField(null=True,blank=True)
-    name = models.CharField(max_length=255, null=True, blank=True)
+    name = models.CharField(max_length=255, null=False, blank=False)
     # phone = models.CharField(max_length=255,null=True,blank=True)
     phone = models.IntegerField(
         validators=[
             RegexValidator(r"^\d{10}$", "Phone number must be exactly 10 digits")
         ],
-        null=True,
-        blank=True,
+        null=False,
+        blank=False,
     )
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -163,7 +163,7 @@ class Inbox(models.Model):
     service = models.ForeignKey(
         Service, on_delete=models.CASCADE, related_name="contact_us"
     )
-    email = models.EmailField(null=True, blank=True)
+    email = models.EmailField(null=False, blank=False)
     subject = models.CharField(max_length=255, null=True, blank=True)
     message = models.TextField(null=True, blank=True)
     date = models.DateTimeField(auto_now=True, null=True, blank=True)
