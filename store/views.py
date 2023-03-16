@@ -958,7 +958,8 @@ class TeamProfileViewSet(ModelViewSet):
 
         # serializer = TeamProfileSerializer(data=data)
 
-        existing_profile = TeamProfile.objects.first()
+        # existing_profile = TeamProfile.objects.first()
+        existing_profile = TeamProfile.objects.filter(account=self.request.user).first()
 
         # If the user already has a profile, update it instead of creating a new one
         if existing_profile:
