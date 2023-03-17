@@ -108,7 +108,8 @@ class EventTeamSerializer(serializers.ModelSerializer):
             "work_time",
             "over_view",
             "address",
-            "district"
+            "district",
+            "email"
             # 'profile_pic'
         ]
 
