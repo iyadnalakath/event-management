@@ -495,3 +495,13 @@ class PopularitySerializer(serializers.ModelSerializer):
     #         # creator = self.context['request'].user
     #     )
     #     return popularity
+# class LocationSerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = Location
+#         fields = ['latitude', 'longitude', 'district']
+
+class LocationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Location
+        fields = ('id', 'latitude', 'longitude', 'district')
+        read_only_fields = ('district',)

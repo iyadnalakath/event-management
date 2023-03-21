@@ -20,6 +20,8 @@ from rest_framework.views import APIView
 from uuid import UUID
 from django.db.models import Q
 from django.db.models.functions import Coalesce
+import requests
+import os
 
 
 # Create your views here.
@@ -165,6 +167,7 @@ class ServiceViewSet(ModelViewSet):
     #     .annotate(rating=Avg("ratings__rating"))
     #     .filter(is_deleted=False)
     # )
+    permission_classes = [AllowAny]
     queryset = Service.objects.all()
     
     def get_queryset(self):
@@ -177,7 +180,7 @@ class ServiceViewSet(ModelViewSet):
         return queryset
     
     serializer_class = ServiceSerializer
-    permission_classes = [IsAuthenticatedOrReadOnly]
+    
     filter_backends = [DjangoFilterBackend, OrderingFilter, SearchFilter]
     filterset_fields = ["account__district"]
     ordering_fields = ["rating", "amount"]
@@ -248,17 +251,26 @@ class ServiceViewSet(ModelViewSet):
             )
             # return super().list(request, *args, **kwargs)
             return Response(serializer.data, status=status.HTTP_200_OK)
-        elif self.request.user.role == "event_management":
+
+        # elif self.request.user.role == "event_management":
+        #     queryset = queryset.filter(account=self.request.user)
+        #     serializer = ServiceSerializer(
+        #         queryset, many=True, context={"request": self.request}
+        #     )
+        #     return Response(serializer.data)
+        # else:
+        #     return super().list(request, *args, **kwargs)
+        elif request.user.is_authenticated and self.request.user.role == "event_management":
             queryset = queryset.filter(account=self.request.user)
             serializer = ServiceSerializer(
                 queryset, many=True, context={"request": self.request}
             )
             return Response(serializer.data)
-        elif self.request.user.role in ["admin", "customer"]:
+        else:
             return super().list(request, *args, **kwargs)
 
-        else:
-            raise PermissionDenied("You are not allowed to retrieve this object.")
+        # else:
+        #     raise PermissionDenied("You are not allowed to retrieve this object.")
         
     def destroy(self, request, *args, **kwargs):
         service = self.get_object()
@@ -1020,3 +1032,87 @@ class TeamProfileViewSet(ModelViewSet):
                 raise PermissionDenied("You are not allowed to delete this object.")
         else:
             raise PermissionDenied("You are not allowed to delete this object.")
+
+
+
+# class LocationCreateAPIView(generics.CreateAPIView):
+#     serializer_class = LocationSerializer
+#     permission_classes = [AllowAny]
+
+#     def perform_create(self, serializer):
+#         # Get latitude and longitude from request data
+#         latitude = serializer.validated_data.get('latitude')
+#         longitude = serializer.validated_data.get('longitude')
+
+#         # Send latitude and longitude to geocoding API
+#         api_key = os.environ.get('OPENCAGE_API_KEY')
+#         response = requests.get(f'https://api.opencagedata.com/geocode/v1/json?q={latitude},{longitude}&key={api_key}')
+#         data = response.json()
+
+#         # Extract district name from response data
+#         district = data['results'][0]['components']['county']
+
+#         # Set district field in serializer
+#         serializer.save(district=district)
+
+# class LocationView(APIView):
+#     def post(self, request):
+#         latitude = request.data['latitude']
+#         longitude = request.data['longitude']
+#         url = f"https://atlas.mapmyindia.com/api/places/search/json?location={latitude},{longitude}&pod=city&region=kerala&bias=city&type=2&sr=0"
+#         headers = {
+#             "Authorization": "Bearer YOUR_MAPMYINDIA_API_KEY"
+#         }
+#         response = requests.get(url, headers=headers)
+#         data = response.json()
+#         district = ""
+#         if len(data['suggestedLocations']) > 0:
+#             address = data['suggestedLocations'][0]['address']
+#             district = address.get('district', '')
+#         location = Location(latitude=latitude, longitude=longitude, district=district)
+#         location.save()
+#         serializer = LocationSerializer(location)
+#         return Response(serializer.data)
+
+class LocationCreateAPIView(APIView):
+    permission_classes = [AllowAny]
+
+
+    def post(self, request, format=None):
+        serializer = LocationSerializer(data=request.data)
+        if serializer.is_valid():
+            # Get latitude and longitude from request data
+            latitude = serializer.validated_data.get('latitude')
+            longitude = serializer.validated_data.get('longitude')
+
+            # Send latitude and longitude to geocoding API
+            api_key = os.environ.get('OPENCAGE_API_KEY')
+            # response = requests.get(f'https://api.opencagedata.com/geocode/v1/json?q={latitude},{longitude}&key={api_key}')
+            response = requests.get(f'https://api.opencagedata.com/geocode/v1/json?q=10.8505,76.2711&key={api_key}')
+
+            # Debug print statements
+            print(response.status_code)
+            print(response.json())
+
+            # Check if API request was successful
+            if response.status_code != 200:
+                return Response({'error': 'Failed to get location information from API.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+            data = response.json()
+
+            # Check if API response contains results
+            if 'results' not in data or not data['results']:
+                return Response({'error': 'No results found for the given location.'}, status=status.HTTP_400_BAD_REQUEST)
+
+            # Extract district name from response data
+            district = data['results'][0]['components'].get('county')
+
+            # Check if district name was found
+            if not district:
+                return Response({'error': 'Could not determine the district for the given location.'}, status=status.HTTP_400_BAD_REQUEST)
+
+            # Set district field in serializer and save location object
+            serializer.save(district=district)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

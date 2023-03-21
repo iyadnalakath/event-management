@@ -204,3 +204,13 @@ class Popularity(models.Model):
     #     else:
     #         self.popularity = 0.0
     #     self.save()
+class Location(models.Model):
+    latitude = models.DecimalField(max_digits=9, decimal_places=6)
+    longitude = models.DecimalField(max_digits=9, decimal_places=6)
+    district = models.CharField(max_length=50)
+
+
+# class Location(models.Model):
+#     latitude = models.DecimalField(max_digits=9, decimal_places=6)
+#     longitude = models.DecimalField(max_digits=9, decimal_places=6)
+#     district = models.CharField(max_length=255, null=True, blank=True)

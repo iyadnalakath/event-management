@@ -19,6 +19,8 @@ from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.viewsets import ModelViewSet
 from rest_framework import generics
 from django.contrib.auth.views import LoginView
+from rest_framework import views
+from django.contrib.auth import logout
 
 
 
@@ -176,7 +178,13 @@ class LoginView(APIView):
 # class LoginView(generics.CreateAPIView):
 #     permission_classes = [AllowAny]
 #     serializer_class = LoginSerializer
+class LogoutView(views.APIView):
+    permission_classes = (IsAuthenticated,)
 
+    def post(self, request):
+        # Django's built-in logout function clears the session and removes the user's authentication token.
+        logout(request)
+        return Response(status=204)
 
 
 

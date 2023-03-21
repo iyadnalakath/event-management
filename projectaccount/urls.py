@@ -8,10 +8,12 @@ from .views import (
     EventManagementUsersView,
 )
 from . import views
+from .views import LogoutView
 
 
 urlpatterns = [
     path("login/", LoginView.as_view(), name="login"),
+    path('logout/', LogoutView.as_view(), name='logout'),
     path("register/", RegisterCustomerView.as_view(), name="register"),
     path("event_team_register/", RegisterEventTeamView.as_view(), name="register"),
     path("userslist/", ListUsersView.as_view(), name="list_users"),

@@ -63,7 +63,8 @@ class LoginSerializer(serializers.Serializer):
 #     password = serializers.CharField()
 
 
-
+class LogoutSerializer(serializers.Serializer):
+    pass
 
 
 
