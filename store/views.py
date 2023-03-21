@@ -22,6 +22,9 @@ from django.db.models import Q
 from django.db.models.functions import Coalesce
 import requests
 import os
+from django.db.models import Min
+from django.db.models import OuterRef, Subquery, Exists
+from django.db.models.functions import Lower
 
 
 # Create your views here.
@@ -162,6 +165,7 @@ class SubCatagoryViewSet(ModelViewSet):
 
 
 class ServiceViewSet(ModelViewSet):
+    model = Service 
     # queryset = (
     #     Service.objects.select_related("sub_catagory")
     #     .annotate(rating=Avg("ratings__rating"))
@@ -169,22 +173,79 @@ class ServiceViewSet(ModelViewSet):
     # )
     permission_classes = [AllowAny]
     queryset = Service.objects.all()
+
+    serializer_class = ServiceSerializer
     
+    filter_backends = [DjangoFilterBackend, OrderingFilter, SearchFilter]
+    filterset_fields = ["account__district"]
+    # filterset_fields = [
+    # "account__district",
+    # "account__district__icontains", # case-insensitive filter for account__district
+    # ]
+
+
+    ordering_fields = ["rating", "amount"]
+    search_fields = ["service_name"]
+    
+    # def get_queryset(self):
+    #     queryset = super().get_queryset()
+
+    #     # prefetch ratings to avoid N+1 queries
+    #     queryset = queryset.prefetch_related("ratings")
+
+    #     # your other filtering and ordering code here
+    #     return queryset
+
     def get_queryset(self):
         queryset = super().get_queryset()
 
         # prefetch ratings to avoid N+1 queries
         queryset = queryset.prefetch_related("ratings")
 
-        # your other filtering and ordering code here
+        # filter by district
+        district_query = self.request.GET.get("account__district__icontains")
+        if district_query:
+            queryset = queryset.filter(account__district__iregex=r'^{0}'.format(district_query))
+
+    # filter by search query
+        # filter by search query
+        search_query = self.request.GET.get("service_name")
+        if search_query:
+            queryset = queryset.filter(Q(service_name__icontains=search_query))
+
+        # remove duplicates based on account field using subquery
+        subquery = Service.objects.filter(
+            account=OuterRef("account")
+        ).order_by("-id").values("id")[:1]
+        
+        queryset = queryset.filter(id__in=Subquery(subquery))
+
+        # annotate rating
+        queryset = queryset.annotate(rating=Avg("ratings__rating"))
+
+        # filter deleted records
+        queryset = queryset.filter(is_deleted=False)
+
+        # select related records
+        queryset = queryset.select_related("sub_catagory")
+
         return queryset
+    # def get_queryset(self):
+    #     queryset = super().get_queryset()
+
+    #     # prefetch ratings to avoid N+1 queries
+    #     queryset = queryset.prefetch_related("ratings")
+
+    #     # filter by district
+    #     district = self.request.query_params.get("account__district")
+    #     if district:
+    #         queryset = queryset.filter(account__district=district).distinct('account')
+
+    #     # your other filtering and ordering code here
+    #     return queryset
+
     
-    serializer_class = ServiceSerializer
-    
-    filter_backends = [DjangoFilterBackend, OrderingFilter, SearchFilter]
-    filterset_fields = ["account__district"]
-    ordering_fields = ["rating", "amount"]
-    search_fields = ["service_name"]
+
 
     def create(self, request, *args, **kwargs):
         data = request.data.copy()
@@ -218,22 +279,7 @@ class ServiceViewSet(ModelViewSet):
                 raise PermissionDenied("You are not allowed to create this object.")
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    def update(self, request, *args, **kwargs):
-        instance = self.get_object()
-        data = request.data.copy()
-        data["account"] = self.request.user.id
-        # Check if the current user created this service
-        if instance.account != self.request.user:
-            raise PermissionDenied("You are not allowed to update this object.")
-        else:
-            serializer = self.get_serializer(
-                instance, data, partial=kwargs.get("partial", False)
-            )
-            serializer.is_valid(raise_exception=True)
-
-            serializer.save()
-            return Response(serializer.data)
+        
 
     def list(self, request, *args, **kwargs):
         # queryset = self.filter_queryset(queryset)
@@ -272,6 +318,23 @@ class ServiceViewSet(ModelViewSet):
         # else:
         #     raise PermissionDenied("You are not allowed to retrieve this object.")
         
+
+    def update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        data = request.data.copy()
+        data["account"] = self.request.user.id
+        # Check if the current user created this service
+        if instance.account != self.request.user:
+            raise PermissionDenied("You are not allowed to update this object.")
+        else:
+            serializer = self.get_serializer(
+                instance, data, partial=kwargs.get("partial", False)
+            )
+            serializer.is_valid(raise_exception=True)
+
+            serializer.save()
+            return Response(serializer.data)
+
     def destroy(self, request, *args, **kwargs):
         service = self.get_object()
         if request.user.role == "admin":
