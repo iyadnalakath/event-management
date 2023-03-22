@@ -25,7 +25,7 @@ import os
 from django.db.models import Min
 from django.db.models import OuterRef, Subquery, Exists
 from django.db.models.functions import Lower
-
+from django_filters import rest_framework as filters
 
 # Create your views here.
 class AreaViewSet(ModelViewSet):
@@ -162,7 +162,12 @@ class SubCatagoryViewSet(ModelViewSet):
 #                 raise PermissionDenied("You are not allowed to create this object.")
 #         else:
 #             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+class ServiceFilter(filters.FilterSet):
+    account__district = filters.CharFilter(field_name="account__district", lookup_expr="icontains")
 
+    class Meta:
+        model = Service
+        fields = ["account__district"]
 
 class ServiceViewSet(ModelViewSet):
     model = Service 
@@ -177,74 +182,45 @@ class ServiceViewSet(ModelViewSet):
     serializer_class = ServiceSerializer
     
     filter_backends = [DjangoFilterBackend, OrderingFilter, SearchFilter]
-    filterset_fields = ["account__district"]
-    # filterset_fields = [
-    # "account__district",
-    # "account__district__icontains", # case-insensitive filter for account__district
-    # ]
+    # filterset_fields = ["account__district"]
+    filterset_class = ServiceFilter
 
 
-    ordering_fields = ["rating", "amount"]
+    ordering_fields = ["rating"]
     search_fields = ["service_name"]
     
-    # def get_queryset(self):
-    #     queryset = super().get_queryset()
-
-    #     # prefetch ratings to avoid N+1 queries
-    #     queryset = queryset.prefetch_related("ratings")
-
-    #     # your other filtering and ordering code here
-    #     return queryset
-
     def get_queryset(self):
         queryset = super().get_queryset()
 
         # prefetch ratings to avoid N+1 queries
         queryset = queryset.prefetch_related("ratings")
 
-        # filter by district
-        district_query = self.request.GET.get("account__district__icontains")
-        if district_query:
-            queryset = queryset.filter(account__district__iregex=r'^{0}'.format(district_query))
-
-    # filter by search query
-        # filter by search query
-        search_query = self.request.GET.get("service_name")
-        if search_query:
-            queryset = queryset.filter(Q(service_name__icontains=search_query))
-
-        # remove duplicates based on account field using subquery
-        subquery = Service.objects.filter(
-            account=OuterRef("account")
-        ).order_by("-id").values("id")[:1]
-        
-        queryset = queryset.filter(id__in=Subquery(subquery))
-
-        # annotate rating
-        queryset = queryset.annotate(rating=Avg("ratings__rating"))
-
-        # filter deleted records
-        queryset = queryset.filter(is_deleted=False)
-
-        # select related records
-        queryset = queryset.select_related("sub_catagory")
-
+        # your other filtering and ordering code here
         return queryset
+
     # def get_queryset(self):
     #     queryset = super().get_queryset()
 
     #     # prefetch ratings to avoid N+1 queries
     #     queryset = queryset.prefetch_related("ratings")
 
-    #     # filter by district
-    #     district = self.request.query_params.get("account__district")
-    #     if district:
-    #         queryset = queryset.filter(account__district=district).distinct('account')
+    #     # apply filters
+    #     queryset = self.filter_queryset(queryset)
 
-    #     # your other filtering and ordering code here
+    #     # apply search
+    #     search_query = self.request.GET.get("search")
+    #     if search_query:
+    #         queryset = queryset.filter(service_name__icontains=search_query)
+
+    #     # apply ordering
+    #     # ordering_query = self.request.GET.get("ordering")
+    #     # if ordering_query:
+    #     #     queryset = queryset.order_by(ordering_query)
+
+    #     # apply distinct on the account field
+    #     queryset = queryset.values("sub_catagory").distinct()
+
     #     return queryset
-
-    
 
 
     def create(self, request, *args, **kwargs):
