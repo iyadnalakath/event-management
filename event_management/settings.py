@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     "rest_framework.authtoken",
     "djoser",
     
+    'django_model_mixins',
     "django_filters",
     "store",
     "main",

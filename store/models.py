@@ -46,7 +46,7 @@ class SubCatagory(BaseModel):
 
 class ProfilePic(BaseModel):
     account = models.ForeignKey(
-        Account, on_delete=models.PROTECT, related_name="profile", null=True, blank=True
+        Account, on_delete=models.CASCADE, related_name="profile", null=True, blank=True
     )
     # profile_pic = models.ImageField(
     #     upload_to="mediafiles", default="", null=True, blank=True
@@ -63,7 +63,7 @@ class ProfilePic(BaseModel):
     
 class TeamProfile(BaseModel):
     account = models.ForeignKey(
-        Account, on_delete=models.PROTECT, related_name="team_profilepic", null=True, blank=True
+        Account, on_delete=models.CASCADE, related_name="team_profilepic", null=True, blank=True
     )
     team_profile = models.ImageField(
         upload_to="mediafiles", default="", null=True, blank=True

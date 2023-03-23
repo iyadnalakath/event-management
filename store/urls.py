@@ -4,12 +4,13 @@ from . import views
 from .views import PopularityViewSetList,LocationCreateAPIView
 
 urlpatterns = [
-    path("popular/", PopularityViewSetList.as_view(), name="popular-product-list"),
+    # path("popular/", PopularityViewSetList.as_view(), name="popular-product-list"),
     path('location/', LocationCreateAPIView.as_view(), name='location_create'),
     # path('location/', LocationView.as_view(), name='location'),
 ]
 
 router = routers.DefaultRouter()
+router.register("popular", views.PopularityViewSetList)
 router.register("area", views.AreaViewSet)
 # router.register('catagory',views.CatagoryViewSet)
 router.register("subcatagory", views.SubCatagoryViewSet)

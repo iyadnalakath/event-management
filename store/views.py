@@ -872,8 +872,10 @@ class InboxViewSet(ModelViewSet):
 #     permission_classes = [IsAuthenticated]
 
 
-
-class PopularityViewSetList(generics.ListAPIView):
+class PopularityViewSetList(ModelViewSet):
+# class PopularityViewSetList(generics.ListAPIView):
+    serializer_class = ServiceSerializer
+    permission_classes = [AllowAny]
     top_services = (
         Service.objects.filter(account_id=OuterRef('account_id'))
         .annotate(rating=Avg('ratings__rating'))
@@ -887,9 +889,21 @@ class PopularityViewSetList(generics.ListAPIView):
         .order_by('-rating')
         .filter(is_deleted=False)
 )
-    serializer_class = ServiceSerializer
-    permission_classes = [AllowAny]
 
+
+    def destroy(self, request, *args, **kwargs):
+        profile = self.get_object()
+        if request.user.role == "admin":
+            profile.delete()
+            return Response({"message": "successfully deleted."}, status=status.HTTP_204_NO_CONTENT)
+        elif request.user.role == "event_management":
+            if profile.account.id == self.request.user.id:
+                profile.delete()
+                return Response({"message": "Profile successfully deleted."}, status=status.HTTP_204_NO_CONTENT)
+            else:
+                raise PermissionDenied("You are not allowed to delete this object.")
+        else:
+            raise PermissionDenied("You are not allowed to delete this object.")
     # def list(self, request, *args, **kwargs):
     #     queryset=self.get_queryset()
     #     if self.request.user.role == 'admin':

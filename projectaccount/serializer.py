@@ -250,6 +250,7 @@ class EventManagementListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Account
         fields = (
+            "id",
             "team_name",
             "username",
             "email",

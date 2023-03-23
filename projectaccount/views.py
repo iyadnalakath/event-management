@@ -21,6 +21,9 @@ from rest_framework import generics
 from django.contrib.auth.views import LoginView
 from rest_framework import views
 from django.contrib.auth import logout
+from django.http import Http404
+# from django_model_mixins import mixins
+
 
 
 
@@ -80,6 +83,17 @@ from django.contrib.auth import logout
 
 class RegisterCustomerView(APIView):
     permission_classes = [AllowAny]
+
+    def get_object(self, pk):
+        try:
+            return Account.objects.get(pk=pk)
+        except Account.DoesNotExist:
+            raise Http404
+
+    def get(self, request, pk):
+        customer = self.get_object(pk)
+        serializer = UserListSerializer(customer)
+        return Response(serializer.data)
 
     def post(self, request):
         serializer = RegisterCustomerSerializer(data=request.data)
@@ -192,7 +206,7 @@ class ListUsersView(generics.ListAPIView):
     queryset = Account.objects.filter(role="customer")
     serializer_class = UserListSerializer
     permission_classes = [IsAuthenticated]
-
+    
     def list(self, request, *args, **kwargs):
         queryset = self.get_queryset()
         if self.request.user.role == "admin":
@@ -203,8 +217,61 @@ class ListUsersView(generics.ListAPIView):
         else:
             raise PermissionDenied("You are not allowed to retrieve this object.")
 
+    def retrieve(self, request, *args, **kwargs):
+        if self.request.user.role == "admin":
+            instance = self.get_object()
+            serializer = UserListSerializer(instance)
+            return Response(serializer.data)
+        else:
+            raise PermissionDenied("You are not allowed to retrieve this object.")
+        
 
-class EventManagementUsersView(generics.ListAPIView):
+class SingleUserView(ModelViewSet):
+
+    queryset = Account.objects.filter(role="customer")
+    serializer_class = UserListSerializer
+    permission_classes = [IsAdminUser]
+
+    def retrieve(self, request, *args, **kwargs):
+        if self.request.user.role == "admin":
+            instance = self.get_object()
+            serializer = UserListSerializer(instance)
+            return Response(serializer.data)
+        else:
+            raise PermissionDenied("You are not allowed to retrieve this object.")
+        
+
+    def destroy(self, request, *args, **kwargs):
+        profile = self.get_object()
+        if request.user.role == "admin":
+            profile.delete()
+            return Response({"message": "successfully deleted."}, status=status.HTTP_204_NO_CONTENT)
+        elif request.user.role == "event_management":
+            if profile.account.id == self.request.user.id:
+                profile.delete()
+                return Response({"message": "Profile successfully deleted."}, status=status.HTTP_204_NO_CONTENT)
+            else:
+                raise PermissionDenied("You are not allowed to delete this object.")
+        else:
+            raise PermissionDenied("You are not allowed to delete this object.")
+
+        
+# class EventManagementUsersView(generics.ListAPIView):
+#     queryset = Account.objects.filter(role="event_management")
+#     serializer_class = EventManagementListSerializer
+
+#     def list(self, request, *args, **kwargs):
+#         queryset = self.get_queryset()
+#         if self.request.user.role == "admin":
+#             serializer = EventManagementListSerializer(queryset, many=True)
+#             # return super().list(request, *args, **kwargs)
+#             return Response(serializer.data, status=status.HTTP_200_OK)
+
+#         else:
+#             raise PermissionDenied("You are not allowed to retrieve this object.")
+
+
+class EventManagementUsersView(ModelViewSet):
     queryset = Account.objects.filter(role="event_management")
     serializer_class = EventManagementListSerializer
 
@@ -217,3 +284,17 @@ class EventManagementUsersView(generics.ListAPIView):
 
         else:
             raise PermissionDenied("You are not allowed to retrieve this object.")
+
+    def destroy(self, request, *args, **kwargs):
+        profile = self.get_object()
+        if request.user.role == "admin":
+            profile.delete()
+            return Response({"message": "successfully deleted."}, status=status.HTTP_204_NO_CONTENT)
+        elif request.user.role == "event_management":
+            if profile.account.id == self.request.user.id:
+                profile.delete()
+                return Response({"message": "Profile successfully deleted."}, status=status.HTTP_204_NO_CONTENT)
+            else:
+                raise PermissionDenied("You are not allowed to delete this object.")
+        else:
+            raise PermissionDenied("You are not allowed to delete this object.")
