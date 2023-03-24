@@ -22,7 +22,7 @@ from django.contrib.auth.views import LoginView
 from rest_framework import views
 from django.contrib.auth import logout
 from django.http import Http404
-# from django_model_mixins import mixins
+
 
 
 
