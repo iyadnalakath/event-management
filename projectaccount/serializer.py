@@ -1,10 +1,14 @@
 from rest_framework import serializers
+from store.models import TeamProfile
 from django.contrib.auth import authenticate
 from .models import Account
 from django.contrib.auth.models import User
 from rest_framework.authtoken.models import Token
 from rest_framework.response import Response
 from rest_framework import status
+from django.conf import settings
+from urllib.parse import urljoin
+
 
 
 class LoginSerializer(serializers.Serializer):
@@ -247,6 +251,7 @@ class UserListSerializer(serializers.ModelSerializer):
 
 
 class EventManagementListSerializer(serializers.ModelSerializer):
+    profile = serializers.SerializerMethodField()
     class Meta:
         model = Account
         fields = (
@@ -260,4 +265,29 @@ class EventManagementListSerializer(serializers.ModelSerializer):
             "over_view",
             "address",
             # 'profile_pic'
+            "profile"
         )
+        
+  
+    def get_profile(self, obj):
+        team_profile = TeamProfile.objects.filter(account=obj).first()
+        if team_profile:
+            url = team_profile.team_profile.url
+            if settings.MEDIA_URL in url:
+                return urljoin(settings.HOSTNAME, url)
+        return None
+
+
+
+
+
+#   def get_profile(self, obj):
+#         request = self.context.get("request")
+#         team_profile = TeamProfile.objects.filter(account=obj).first()
+#         if team_profile and team_profile.team_profile:
+#             url = team_profile.team_profile.url
+#             if request:
+#                 return request.build_absolute_uri(url)
+#             else:
+#                 return url
+#         return None

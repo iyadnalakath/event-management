@@ -274,6 +274,7 @@ class SingleUserView(ModelViewSet):
 class EventManagementUsersView(ModelViewSet):
     queryset = Account.objects.filter(role="event_management")
     serializer_class = EventManagementListSerializer
+    permission_classes = [IsAdminUser]
 
     def list(self, request, *args, **kwargs):
         queryset = self.get_queryset()

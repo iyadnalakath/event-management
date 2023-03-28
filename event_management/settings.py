@@ -254,3 +254,5 @@ MEDIA_URL = "/media/"
 # # SESSION_COOKIE_DOMAIN = None
 # SESSION_ENGINE = 'django.contrib.sessions.backends.db'
 # SESSION_COOKIE_DOMAIN = 'localhost'
+HOSTNAME = 'http://127.0.0.1:8000/'
+     

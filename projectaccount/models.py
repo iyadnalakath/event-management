@@ -5,6 +5,9 @@ from django.dispatch import receiver
 from django.conf import settings
 from django.contrib.auth import authenticate
 from django.db.models.signals import post_save
+from main.models import BaseModel
+
+
 
 # Create your models here.
 
@@ -69,6 +72,7 @@ class Account(AbstractBaseUser):
     place = models.CharField(max_length=255, null=False, blank=False, default="")
     work_time = models.CharField(max_length=255, null=True, blank=True)
     over_view = models.CharField(max_length=555, null=True, blank=True)
+    # profile=models.ForeignKey(models.TeamProfile,null=True,blank=True)
     # profile_pic=models.ImageField(upload_to ='mediafiles',default="",null=True,blank=True)
     # more_photos=models.ImageField(upload_to ='mediafiles',default="",null=True,blank=True)
     pin_code = models.CharField(max_length=255, null=True, blank=True)
@@ -107,6 +111,14 @@ class Account(AbstractBaseUser):
 
     def has_module_perms(self, app_label):
         return True
+    
+# class TeamProfile(BaseModel):
+#     account = models.ForeignKey(
+#         Account, on_delete=models.CASCADE, related_name="team_profilepic", null=True, blank=True
+#     )
+#     team_profile = models.ImageField(
+#         upload_to="mediafiles", default="", null=True, blank=True
+#     )
 
 
 @receiver(post_save, sender=settings.AUTH_USER_MODEL)

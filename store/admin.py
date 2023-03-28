@@ -45,11 +45,7 @@ class ProfilePicAdmin(admin.ModelAdmin):
 
 admin.site.register(ProfilePic, ProfilePicAdmin)
 
-class TeamProfileAdmin(admin.ModelAdmin):
-    list_display = ("id", "account", "team_profile")
 
-
-admin.site.register(TeamProfile, TeamProfileAdmin)
 
 
 class EnquiryAdmin(admin.ModelAdmin):
@@ -64,3 +60,9 @@ class InboxAdmin(admin.ModelAdmin):
 
 
 admin.site.register(Inbox, InboxAdmin)
+
+class TeamProfileAdmin(admin.ModelAdmin):
+    list_display = ("id", "account", "team_profile")
+
+
+admin.site.register(TeamProfile, TeamProfileAdmin)
