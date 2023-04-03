@@ -196,36 +196,52 @@ class ServiceViewSet(ModelViewSet):
     ordering_fields = ["rating"]
     search_fields = ["service_name"]
     
-    # def get_queryset(self):
-    #     queryset = super().get_queryset()
-
-    #     # prefetch ratings to avoid N+1 queries
-    #     queryset = queryset.prefetch_related("ratings")
-
-    #     # your other filtering and ordering code here
-    #     return queryset
-    
     def get_queryset(self):
         queryset = super().get_queryset()
 
         # prefetch ratings to avoid N+1 queries
         queryset = queryset.prefetch_related("ratings")
 
+        # your other filtering and ordering code here
+        return queryset
+
+    def filter_queryset(self, queryset):
         # apply filters and search
-        queryset = self.filter_queryset(queryset)
-       
+        queryset = super().filter_queryset(queryset)
+
         # check if the result is empty
         if (not self.request.query_params.get('account__district') and not self.request.query_params.get('search')):
             queryset = Service.objects.none()
 
         return queryset
 
+    
     # def get_queryset(self):
     #     queryset = super().get_queryset()
 
     #     # prefetch ratings to avoid N+1 queries
     #     queryset = queryset.prefetch_related("ratings")
 
+    #     # apply filters and search
+    #     # queryset = self.filter_queryset(queryset)
+
+       
+    #     # check if the result is empty
+    #     if (not self.request.query_params.get('account__district') and not self.request.query_params.get('search')):
+    #         queryset = Service.objects.none()
+    #     # if not queryset.exists() and ("account__district" not in self.request.query_params and "search" not in self.request.query_params):
+    #     # if queryset is None:
+    #     # if self.filter_queryset(queryset):
+    #     #     if (not self.request.query_params.get('account__district') and not self.request.query_params.get('search')):
+
+    #         # queryset = Service.objects.none()
+    #     else:
+    #         return queryset
+    # def get_queryset(self):
+    #     queryset = super().get_queryset()
+
+    #     # prefetch ratings to avoid N+1 queries
+    #     queryset = queryset.prefetch_related("ratings")
 
     #     # apply filters and search
     #     filterset = self.filterset_class(data=self.request.query_params, queryset=queryset, request=self.request)
@@ -237,8 +253,13 @@ class ServiceViewSet(ModelViewSet):
     #         self.request.query_params['account__district'] = None
     #         self.request.query_params['search'] = None
     #         queryset = Service.objects.none()
+    #     elif not queryset.exists():
+    #         # When there is no filter or search criteria applied or if they are empty,
+    #         # then return all the services.
+    #         queryset = Service.objects.all()
 
     #     return queryset
+
     # #     queryset = super().get_queryset()
 
     #     # prefetch ratings to avoid N+1 queries
@@ -300,7 +321,7 @@ class ServiceViewSet(ModelViewSet):
     def list(self, request, *args, **kwargs):
         # queryset = self.filter_queryset(queryset)
         queryset = self.get_queryset()
-        queryset = self.filter_queryset(queryset)
+        # queryset = self.filter_queryset(queryset)
 
         # if self.request.user.role in ['admin', 'customer'] and request.GET.get('sub_catagory'):
         if self.request.GET.get("sub_catagory"):
@@ -364,7 +385,16 @@ class ServiceViewSet(ModelViewSet):
                 raise PermissionDenied("You are not allowed to delete this object.")
         else:
             raise PermissionDenied("You are not allowed to delete this object.")
-        
+
+
+    def retrieve(self, request, pk=None):
+        try:
+            service = Service.objects.get(pk=pk)
+        except Service.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        serializer = ServiceSerializer(service)
+        return Response(serializer.data)    
 
     # def update(self, request, *args, **kwargs):
     #     service = self.get_object()
@@ -458,25 +488,33 @@ class ServiceViewSet(ModelViewSet):
     #         return Response(serializer.data)
     #     else:
     #         raise PermissionDenied("You are not allowed to retrieve this object.")
-
     # def retrieve(self, request, *args, **kwargs):
-    #     queryset=self.get_queryset()
-    #     if self.request.user.role in ['admin','customer']:
-    #         serializer=ServiceSerializer(queryset,many=True)
-    #         return Response (serializer.data,status=status.HTTP_200_OK)
+    #     queryset = self.get_queryset()
+    #     if self.request.user:
+    #         serializer = ServiceSerializer(queryset, many=True)
+    #         return Response(serializer.data, status=status.HTTP_200_OK)
+    # def retrieve(self, request, *args, **kwargs):
+    #     queryset = self.get_queryset()
+    #     serializer = ServiceSerializer(queryset, many=True)
+    #     return Response(serializer.data, status=status.HTTP_200_OK)
+    # def retrieve(self, request, *args, **kwargs):
+    #     queryset = self.get_queryset()
+    #     if self.request.user.role in ['admin', 'customer']:
+    #         serializer = ServiceSerializer(queryset, many=True)
+    #         return Response(serializer.data, status=status.HTTP_200_OK)
     #     elif self.request.user.role == 'event_management':
     #         queryset = Service.objects.filter(account=self.request.user)
     #         serializer = ServiceSerializer(queryset, many=True)
     #         return Response(serializer.data)
-    #     elif self.request.user.role == 'admin':
-    #         return super().list(request, *args, **kwargs)
-
+    #     elif not self.request.user.role:
+    #         serializer = ServiceSerializer(queryset, many=True)
+    #         return Response(serializer.data, status=status.HTTP_200_OK)
     #     else:
-    #         raise PermissionDenied("You are not allowed to retrieve this object.")
+    #         raise PermissionDenied("You are not the owner of this service.")
 
     # def retrieve(self, request, service_id=None,*args, **kwargs):
     #     data = request.data.copy()
-    #     data["service"] = kwargs["service_id"]
+    #     # data["service"] = kwargs["service_id"]
     #     service = Service.objects.get(id=kwargs["service_id"])
     #     if request.user.role == 'event_management':
     #         if service.account.id == self.request.user.id:
