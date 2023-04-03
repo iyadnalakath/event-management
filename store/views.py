@@ -26,6 +26,8 @@ from django.db.models import Min
 from django.db.models import OuterRef, Subquery, Exists
 from django.db.models.functions import Lower
 from django_filters import rest_framework as filters
+from django.http import Http404
+from rest_framework.exceptions import NotFound
 
 # Create your views here.
 class AreaViewSet(ModelViewSet):
@@ -178,6 +180,11 @@ class ServiceViewSet(ModelViewSet):
     # )
     permission_classes = [AllowAny]
     queryset = Service.objects.all()
+    # queryset = Service.objects.annotate(
+    #     # sub_catagory=F('sub_category__name'),
+    #     account_district=F('account__district')
+    # ).values('id', 'service_name', 'sub_catagory', 'account_district').distinct()
+
 
     serializer_class = ServiceSerializer
     
@@ -189,17 +196,50 @@ class ServiceViewSet(ModelViewSet):
     ordering_fields = ["rating"]
     search_fields = ["service_name"]
     
+    # def get_queryset(self):
+    #     queryset = super().get_queryset()
+
+    #     # prefetch ratings to avoid N+1 queries
+    #     queryset = queryset.prefetch_related("ratings")
+
+    #     # your other filtering and ordering code here
+    #     return queryset
+    
     def get_queryset(self):
         queryset = super().get_queryset()
 
         # prefetch ratings to avoid N+1 queries
         queryset = queryset.prefetch_related("ratings")
 
-        # your other filtering and ordering code here
+        # apply filters and search
+        queryset = self.filter_queryset(queryset)
+       
+        # check if the result is empty
+        if (not self.request.query_params.get('account__district') and not self.request.query_params.get('search')):
+            queryset = Service.objects.none()
+
         return queryset
 
     # def get_queryset(self):
     #     queryset = super().get_queryset()
+
+    #     # prefetch ratings to avoid N+1 queries
+    #     queryset = queryset.prefetch_related("ratings")
+
+
+    #     # apply filters and search
+    #     filterset = self.filterset_class(data=self.request.query_params, queryset=queryset, request=self.request)
+    #     queryset = filterset.qs
+
+    #     # check if the result is empty
+    #     if not queryset.exists() and (self.request.query_params.get('account__district') or self.request.query_params.get('search')):
+    #         self.request.query_params = self.request.query_params.copy()
+    #         self.request.query_params['account__district'] = None
+    #         self.request.query_params['search'] = None
+    #         queryset = Service.objects.none()
+
+    #     return queryset
+    # #     queryset = super().get_queryset()
 
     #     # prefetch ratings to avoid N+1 queries
     #     queryset = queryset.prefetch_related("ratings")
