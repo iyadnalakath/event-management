@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from store.models import TeamProfile
+from store.models import TeamProfile,Service
 from django.contrib.auth import authenticate
 from .models import Account
 from django.contrib.auth.models import User
@@ -252,6 +252,7 @@ class UserListSerializer(serializers.ModelSerializer):
 
 class EventManagementListSerializer(serializers.ModelSerializer):
     profile = serializers.SerializerMethodField()
+    service = serializers.SerializerMethodField()
     class Meta:
         model = Account
         fields = (
@@ -265,7 +266,8 @@ class EventManagementListSerializer(serializers.ModelSerializer):
             "over_view",
             "address",
             # 'profile_pic'
-            "profile"
+            "profile",
+            "service"
         )
         
   
@@ -277,7 +279,9 @@ class EventManagementListSerializer(serializers.ModelSerializer):
                 return urljoin(settings.HOSTNAME, url)
         return None
 
-
+    def get_service(self, obj):
+        services = Service.objects.filter(account=obj).values()
+        return list(services)
 
 
 
