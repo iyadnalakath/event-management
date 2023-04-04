@@ -393,7 +393,7 @@ class ServiceViewSet(ModelViewSet):
         except Service.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-        serializer = ServiceSerializer(service)
+        serializer = ServiceSerializer(service,context={"request": self.request})
         return Response(serializer.data)    
 
     # def update(self, request, *args, **kwargs):
